@@ -1,0 +1,116 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "description": "Store user profiles and administrative status.",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "passwordHash": "string",
+        "isAdmin": "boolean",
+        "avatarUrl": "string"
+      },
+      "rules": [
+        "allow read, write: if request.auth != null && (request.auth.token.admin == true || request.auth.uid == resource.id);"
+      ]
+    },
+    {
+      "name": "products",
+      "description": "Store fashion products catalog.",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "price": "number",
+        "originalPrice": "number",
+        "image": "string",
+        "images": "array",
+        "sizes": "array",
+        "category": "string",
+        "stock": "number",
+        "description": "string",
+        "rating": "number",
+        "salesCount": "number",
+        "isFlashSale": "boolean",
+        "isPromo": "boolean"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    },
+    {
+      "name": "banners",
+      "description": "Store homepage banners.",
+      "fields": {
+        "id": "string",
+        "image": "string",
+        "url": "string",
+        "title": "string",
+        "subtitle": "string",
+        "badge": "string",
+        "bgColor": "string",
+        "description": "string"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    },
+    {
+      "name": "settings",
+      "description": "Store application-wide settings (logo, dtf, theme).",
+      "fields": {
+        "id": "string",
+        "data": "map"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    },
+    {
+      "name": "homeMedia",
+      "description": "Store homepage media items (gallery).",
+      "fields": {
+        "id": "string",
+        "type": "string",
+        "url": "string",
+        "title": "string",
+        "description": "string"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    },
+    {
+      "name": "media",
+      "description": "Store general media gallery items.",
+      "fields": {
+        "id": "string",
+        "type": "string",
+        "url": "string",
+        "title": "string",
+        "createdAt": "number"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    },
+    {
+      "name": "categories",
+      "description": "Store product categories.",
+      "fields": {
+        "id": "string",
+        "label": "string",
+        "image": "string"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if request.auth != null && request.auth.token.admin == true;"
+      ]
+    }
+  ]
+}

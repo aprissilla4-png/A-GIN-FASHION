@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "id": "usr-admin",
+      "name": "Admin Tokopedia Fashion",
+      "email": "admin@fashion.com",
+      "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "isAdmin": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+    },
+    {
+      "id": "user-1783081099469",
+      "name": "Andho Rakat NTT",
+      "email": "aprhyzsilla1@gmail.com",
+      "password": "aprhyzantonius",
+      "isAdmin": true,
+      "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocKgRGeZgWZyUgSgqfcfq5vyoeQFqZU62Wi-BbzHrCn0fHfobE0T=s96-c"
+    },
+    {
+      "id": "usr-V7R6SdtHZ0cznbdLwERYAAYbMcv2",
+      "name": "Apris Silla",
+      "email": "aprissilla4@gmail.com",
+      "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocKwSlJUSfiOhkrT0yRcqS8qyurgCK7rRI4QIdN2SisMtPBBFbYf=s96-c",
+      "isAdmin": false
+    }
+  ],
+  "products": [],
+  "banners": [],
+  "logoSettings": {
+    "text": "A-GIN",
+    "highlightText": "FASHION",
+    "slogan": "Exclusive Elegance",
+    "logoUrl": "/uploads/a_gin_logo.png"
+  },
+  "dtfSettings": {
+    "bannerImage": "/uploads/upload_1783167947523_o7zz0.jpeg",
+    "identityTitle": "A-GIN DTF & SABLON PREMIUM",
+    "identitySubtitle": "Hasil Cetak Detail Tinggi, Elastis, dan Tahan Cuci",
+    "description": "Layanan sablon Digital Transfer Film (DTF) premium untuk kaos polos premium. Kami menggunakan tinta original Jepang menghasilkan kualitas cetakan warna cerah, detail presisi, dan tidak retak walau dicuci berkali-kali. Sempurna untuk custom kaos komunitas, distro, maupun harian."
+  },
+  "homeMedia": [
+    {
+      "id": "hm-1783102893931",
+      "type": "image",
+      "url": "/uploads/upload_1783102877780_tk8co.png",
+      "title": "KAOS COTTON COMBET 30 S",
+      "description": ""
+    }
+  ],
+  "media": [],
+  "categories": [
+    {
+      "id": "KAOS",
+      "label": "KAOS",
+      "image": "/uploads/upload_1783169023621_z8rks.png"
+    }
+  ]
+}
