@@ -66,27 +66,27 @@ export default function MediaGalleryModal({ isOpen, onClose, onSelect }: MediaGa
               </button>
 
               <motion.button
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={async (e) => {
                   e.stopPropagation();
-                  
-                  
                   try {
                     const res = await fetch(`/api/media/${item.id}`, { method: "DELETE" });
                     if (res.ok) {
                       fetchMedia();
                     } else {
-                      alert("Gagal menghapus media.");
+                      const err = await res.json();
+                      alert("Gagal menghapus: " + (err.error || "Unknown"));
                     }
                   } catch (err) {
                     console.error("Error deleting media:", err);
+                    alert("Terjadi kesalahan saat menghapus media.");
                   }
                 }}
-                className="absolute top-1.5 right-1.5 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-md md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer z-10"
+                className="absolute top-1.5 right-1.5 p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg opacity-100 transition-all flex items-center justify-center cursor-pointer z-20"
                 title="Hapus Media dari Galeri"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4" />
               </motion.button>
             </div>
           ))}

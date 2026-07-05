@@ -19,8 +19,11 @@ import {
   Tag,
   Palette,
   FileJson,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { db } from "../lib/firebase";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, Banner } from "../types";
 import ImageUploadButton from "./ImageUploadButton";
@@ -47,13 +50,13 @@ export default function AdminPanel({
   onReloadSettings
 }: AdminPanelProps) {
   // Navigation tabs inside Admin Panel
-  const [adminTab, setAdminTab] = useState<"products" | "banners" | "small-banners" | "categories" | "videos" | "dtf" | "users">("products");
+  const [adminTab, setAdminTab] = useState<"products" | "banners" | "small-banners" | "info-banners" | "categories" | "videos" | "dtf" | "users" | "gallery" | "customer-uploads">("products");
 
   // Custom configuration states
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [mediaTarget, setMediaTarget] = useState<"product" | "banner" | "dtf" | "category" | "additional" | "small-banner">("product");
+  const [mediaTarget, setMediaTarget] = useState<"product" | "banner" | "dtf" | "category" | "additional" | "small-banner" | "info-banner" | "mockup">("product");
 
-  const openMediaModal = (target: "product" | "banner" | "dtf" | "category" | "additional" | "small-banner") => {
+  const openMediaModal = (target: "product" | "banner" | "dtf" | "category" | "additional" | "small-banner" | "info-banner" | "mockup") => {
     setMediaTarget(target);
     setIsMediaModalOpen(true);
   };
@@ -71,6 +74,10 @@ export default function AdminPanel({
       handleAddGalleryImage(url);
     } else if (mediaTarget === "small-banner") {
       setSbImage(url);
+    } else if (mediaTarget === "info-banner") {
+      setIbImage(url);
+    } else if (mediaTarget === "mockup") {
+      setDtfMockupUrl(url);
     }
   };
 
@@ -81,10 +88,32 @@ export default function AdminPanel({
   const [sbTitle, setSbTitle] = useState("");
   const [sbSubtitle, setSbSubtitle] = useState("");
 
+  // Info Banner State
+  const [infoBanners, setInfoBanners] = useState<any[]>([]);
+  const [infoBannersLoading, setInfoBannersLoading] = useState(false);
+  const [ibImage, setIbImage] = useState("");
+  const [ibTitle, setIbTitle] = useState("");
+  const [ibSubtitle, setIbSubtitle] = useState("");
+  const [ibButtonText, setIbButtonText] = useState("");
+  const [ibButtonUrl, setIbButtonUrl] = useState("");
+  const [ibBgColor, setIbBgColor] = useState("#dc2626");
+  const [ibTextColor, setIbTextColor] = useState("#ffffff");
+  const [ibIsActive, setIbIsActive] = useState(true);
+  const [isEditingInfoBanner, setIsEditingInfoBanner] = useState(false);
+  const [editInfoBannerId, setEditInfoBannerId] = useState<string | null>(null);
+
   const [dtfBannerUrl, setDtfBannerUrl] = useState("");
   const [dtfTitle, setDtfTitle] = useState("");
   const [dtfSubtitle, setDtfSubtitle] = useState("");
   const [dtfDesc, setDtfDesc] = useState("");
+  const [surchargeLogo, setSurchargeLogo] = useState<number>(10000);
+  const [surchargeA5, setSurchargeA5] = useState<number>(20000);
+  const [surchargeA4, setSurchargeA4] = useState<number>(35000);
+  const [surchargeA3, setSurchargeA3] = useState<number>(55000);
+  const [surchargeXXL, setSurchargeXXL] = useState<number>(10000);
+  const [surchargeXXXL, setSurchargeXXXL] = useState<number>(15000);
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("6281219154973");
+  const [dtfMockupUrl, setDtfMockupUrl] = useState("");
   const [bulkJson, setBulkJson] = useState("");
 
   const [mediaTitle, setMediaTitle] = useState("");
@@ -101,6 +130,39 @@ export default function AdminPanel({
 
   const [registeredUsers, setRegisteredUsers] = useState<any[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [galleryDesigns, setGalleryDesigns] = useState<any[]>([]);
+  const [customerUploads, setCustomerUploads] = useState<any[]>([]);
+  const [loadingCustomerUploads, setLoadingCustomerUploads] = useState(false);
+
+  // Centralized deletion states
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteName, setConfirmDeleteName] = useState<string>("");
+  const [confirmDeleteType, setConfirmDeleteType] = useState<"product" | "banner" | "small-banner" | "category" | "video" | "gallery" | "all-products" | "customer-upload">("product");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchGalleryDesigns = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "designs"));
+      const designs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setGalleryDesigns(designs);
+    } catch (err) {
+      console.error("Error fetching designs:", err);
+    }
+  };
+
+  const fetchCustomerUploads = async () => {
+    setLoadingCustomerUploads(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "customerUploads"));
+      const uploads = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCustomerUploads(uploads);
+    } catch (err) {
+      console.error("Error fetching customer uploads in admin:", err);
+    } finally {
+      setLoadingCustomerUploads(false);
+    }
+  };
 
   // Product Form State
   const [isEditing, setIsEditing] = useState(false);
@@ -179,6 +241,12 @@ export default function AdminPanel({
       fetchRegisteredUsers();
     } else if (adminTab === "small-banners") {
       fetchSmallBanners();
+    } else if (adminTab === "info-banners") {
+      fetchInfoBanners();
+    } else if (adminTab === "gallery") {
+      fetchGalleryDesigns();
+    } else if (adminTab === "customer-uploads") {
+      fetchCustomerUploads();
     }
   }, [adminTab]);
 
@@ -205,6 +273,14 @@ export default function AdminPanel({
         setDtfTitle(data.identityTitle || "");
         setDtfSubtitle(data.identitySubtitle || "");
         setDtfDesc(data.description || "");
+        setSurchargeLogo(data.surchargeLogo !== undefined ? Number(data.surchargeLogo) : 10000);
+        setSurchargeA5(data.surchargeA5 !== undefined ? Number(data.surchargeA5) : 20000);
+        setSurchargeA4(data.surchargeA4 !== undefined ? Number(data.surchargeA4) : 35000);
+        setSurchargeA3(data.surchargeA3 !== undefined ? Number(data.surchargeA3) : 55000);
+        setSurchargeXXL(data.surchargeXXL !== undefined ? Number(data.surchargeXXL) : 10000);
+        setSurchargeXXXL(data.surchargeXXXL !== undefined ? Number(data.surchargeXXXL) : 15000);
+        setWhatsappNumber(data.whatsappNumber || "6281219154973");
+        setDtfMockupUrl(data.mockupImage || "");
       }
     } catch (err) {
       console.error(err);
@@ -298,6 +374,100 @@ export default function AdminPanel({
     }
   };
 
+  const fetchInfoBanners = async () => {
+    setInfoBannersLoading(true);
+    try {
+      const res = await fetch("/api/info-banners");
+      if (res.ok) {
+        const data = await res.json();
+        setInfoBanners(data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat banner info:", err);
+    } finally {
+      setInfoBannersLoading(false);
+    }
+  };
+
+  const handleInfoBannerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ibImage || !ibTitle) {
+      alert("Gambar dan Judul wajib diisi.");
+      return;
+    }
+
+    const payload = {
+      image: ibImage,
+      title: ibTitle,
+      subtitle: ibSubtitle,
+      buttonText: ibButtonText,
+      buttonUrl: ibButtonUrl,
+      bgColor: ibBgColor,
+      textColor: ibTextColor,
+      isActive: ibIsActive
+    };
+
+    try {
+      const url = isEditingInfoBanner && editInfoBannerId ? `/api/info-banners/${editInfoBannerId}` : "/api/info-banners";
+      const method = isEditingInfoBanner ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setIbImage("");
+        setIbTitle("");
+        setIbSubtitle("");
+        setIbButtonText("");
+        setIbButtonUrl("");
+        setIbBgColor("#dc2626");
+        setIbTextColor("#ffffff");
+        setIbIsActive(true);
+        setIsEditingInfoBanner(false);
+        setEditInfoBannerId(null);
+        fetchInfoBanners();
+        if (onReloadSettings) onReloadSettings();
+        alert(isEditingInfoBanner ? "Banner info berhasil diperbarui!" : "Banner info berhasil ditambahkan!");
+      } else {
+        const errData = await res.json();
+        alert(`Gagal: ${errData.error || "Gagal menyimpan banner"}`);
+      }
+    } catch (err) {
+      console.error("Error submitting info banner:", err);
+      alert("Terjadi kesalahan koneksi.");
+    }
+  };
+
+  const handleEditInfoBanner = (banner: any) => {
+    setIsEditingInfoBanner(true);
+    setEditInfoBannerId(banner.id);
+    setIbImage(banner.image);
+    setIbTitle(banner.title);
+    setIbSubtitle(banner.subtitle || "");
+    setIbButtonText(banner.buttonText || "");
+    setIbButtonUrl(banner.buttonUrl || "");
+    setIbBgColor(banner.bgColor || "#dc2626");
+    setIbTextColor(banner.textColor || "#ffffff");
+    setIbIsActive(banner.isActive !== false);
+  };
+
+  const handleDeleteInfoBanner = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus banner info ini?")) return;
+    try {
+      const res = await fetch(`/api/info-banners/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchInfoBanners();
+        if (onReloadSettings) onReloadSettings();
+      } else {
+        alert("Gagal menghapus banner.");
+      }
+    } catch (err) {
+      console.error("Error deleting info banner:", err);
+    }
+  };
+
   const handleSmallBannerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sbImage) {
@@ -339,9 +509,14 @@ export default function AdminPanel({
         setMsg({ text: "Foto banner berhasil dihapus!", type: "success" });
         fetchSmallBanners();
         if (onReloadSettings) onReloadSettings();
+        setTimeout(() => setMsg({ text: "", type: "" }), 3000);
+      } else {
+        const err = await res.json();
+        setMsg({ text: "Gagal menghapus: " + (err.error || "Unknown"), type: "error" });
       }
     } catch (err) {
       console.error("Error deleting small banner:", err);
+      setMsg({ text: "Koneksi backend gagal.", type: "error" });
     }
   };
 
@@ -355,11 +530,19 @@ export default function AdminPanel({
           bannerImage: dtfBannerUrl,
           identityTitle: dtfTitle,
           identitySubtitle: dtfSubtitle,
-          description: dtfDesc
+          description: dtfDesc,
+          surchargeLogo,
+          surchargeA5,
+          surchargeA4,
+          surchargeA3,
+          surchargeXXL,
+          surchargeXXXL,
+          whatsappNumber,
+          mockupImage: dtfMockupUrl
         })
       });
       if (res.ok) {
-        setMsg({ text: "Branding Sablon DTF berhasil diperbarui!", type: "success" });
+        setMsg({ text: "Branding & Harga Sablon DTF berhasil diperbarui!", type: "success" });
         if (onReloadSettings) onReloadSettings();
         setTimeout(() => setMsg({ text: "", type: "" }), 3000);
       } else {
@@ -549,41 +732,105 @@ export default function AdminPanel({
     }
   };
 
-  const handleDeleteClick = async (productId: string, productName: string) => {
-    const success = await onDeleteProduct(productId);
-    if (success) {
-      setMsg({ text: `Produk "${productName}" berhasil dihapus.`, type: "success" });
-      setTimeout(() => setMsg({ text: "", type: "" }), 3000);
-    } else {
-      setMsg({ text: "Gagal menghapus produk.", type: "error" });
-    }
+  const handleDeleteClick = (productId: string, productName: string) => {
+    setConfirmDeleteId(productId);
+    setConfirmDeleteName(productName);
+    setConfirmDeleteType("product");
+    setIsConfirmOpen(true);
   };
 
-  const handleDeleteAllClick = async () => {
-    if (!onDeleteAllProducts) return;
-
-    const success = await onDeleteAllProducts();
-    if (success) {
-      setMsg({ text: "Semua produk berhasil dihapus.", type: "success" });
-      setTimeout(() => setMsg({ text: "", type: "" }), 3000);
-    } else {
-      setMsg({ text: "Gagal menghapus semua produk.", type: "error" });
-    }
+  const handleDeleteAllClick = () => {
+    setConfirmDeleteId(null);
+    setConfirmDeleteName("Semua Produk");
+    setConfirmDeleteType("all-products");
+    setIsConfirmOpen(true);
   };
 
-  const handleDeleteBannerClick = async (bannerId: string, bannerTitle: string) => {
+  const handleDeleteBannerClick = (bannerId: string, bannerTitle: string) => {
+    setConfirmDeleteId(bannerId);
+    setConfirmDeleteName(bannerTitle);
+    setConfirmDeleteType("banner");
+    setIsConfirmOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDeleteId && confirmDeleteType !== "all-products") return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/banners/${bannerId}`, { method: "DELETE" });
-      if (res.ok) {
-        setMsg({ text: `Banner "${bannerTitle}" berhasil dihapus.`, type: "success" });
-        fetchBanners();
-        if (onReloadSettings) onReloadSettings();
-        setTimeout(() => setMsg({ text: "", type: "" }), 3000);
-      } else {
-        setMsg({ text: "Gagal menghapus banner.", type: "error" });
+      if (confirmDeleteType === "product") {
+        const success = await onDeleteProduct(confirmDeleteId!);
+        if (success) {
+          setMsg({ text: `Produk "${confirmDeleteName}" berhasil dihapus.`, type: "success" });
+          onReloadProducts();
+        } else {
+          setMsg({ text: "Gagal menghapus produk.", type: "error" });
+        }
+      } else if (confirmDeleteType === "all-products") {
+        if (onDeleteAllProducts) {
+          const success = await onDeleteAllProducts();
+          if (success) {
+            setMsg({ text: "Semua produk berhasil dihapus.", type: "success" });
+            onReloadProducts();
+          } else {
+            setMsg({ text: "Gagal menghapus semua produk.", type: "error" });
+          }
+        }
+      } else if (confirmDeleteType === "banner") {
+        const res = await fetch(`/api/banners/${confirmDeleteId}`, { method: "DELETE" });
+        if (res.ok) {
+          setMsg({ text: `Banner "${confirmDeleteName}" berhasil dihapus.`, type: "success" });
+          fetchBanners();
+          if (onReloadSettings) onReloadSettings();
+        } else {
+          setMsg({ text: "Gagal menghapus banner.", type: "error" });
+        }
+      } else if (confirmDeleteType === "small-banner") {
+        const res = await fetch(`/api/small-banners/${confirmDeleteId}`, { method: "DELETE" });
+        if (res.ok) {
+          setMsg({ text: "Foto banner berhasil dihapus!", type: "success" });
+          fetchSmallBanners();
+          if (onReloadSettings) onReloadSettings();
+        } else {
+          setMsg({ text: "Gagal menghapus foto banner.", type: "error" });
+        }
+      } else if (confirmDeleteType === "category") {
+        const res = await fetch(`/api/categories/${confirmDeleteId}`, { method: "DELETE" });
+        if (res.ok) {
+          setMsg({ text: `Kategori "${confirmDeleteName}" berhasil dihapus.`, type: "success" });
+          fetchCategories();
+        } else {
+          const err = await res.json();
+          setMsg({ text: "Gagal menghapus kategori: " + (err.error || "Unknown"), type: "error" });
+        }
+      } else if (confirmDeleteType === "video") {
+        const res = await fetch(`/api/media/${confirmDeleteId}`, { method: "DELETE" });
+        if (res.ok) {
+          setMsg({ text: "Video berhasil dihapus.", type: "success" });
+          setLookbookVideos(prev => prev.filter(item => item.id !== confirmDeleteId));
+          fetchLookbookVideos();
+        } else {
+          const errData = await res.json();
+          setMsg({ text: "Gagal menghapus video: " + (errData.error || "Unknown error"), type: "error" });
+        }
+      } else if (confirmDeleteType === "gallery") {
+        await deleteDoc(doc(db, "designs", confirmDeleteId!));
+        setMsg({ text: "Gambar galeri berhasil dihapus.", type: "success" });
+        fetchGalleryDesigns();
+      } else if (confirmDeleteType === "customer-upload") {
+        await deleteDoc(doc(db, "customerUploads", confirmDeleteId!));
+        setMsg({ text: "File penyimpanan khusus customer berhasil dihapus.", type: "success" });
+        fetchCustomerUploads();
       }
-    } catch (err) {
-      setMsg({ text: "Gagal menghapus banner.", type: "error" });
+      setTimeout(() => setMsg({ text: "", type: "" }), 3000);
+    } catch (err: any) {
+      console.error("Delete execution failed:", err);
+      setMsg({ text: "Terjadi kesalahan saat menghapus data.", type: "error" });
+      setTimeout(() => setMsg({ text: "", type: "" }), 3000);
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteId(null);
+      setConfirmDeleteName("");
+      setIsConfirmOpen(false);
     }
   };
 
@@ -637,6 +884,17 @@ export default function AdminPanel({
             <span>Banner Slogan ({smallBanners.length})</span>
           </button>
           <button
+            onClick={() => setAdminTab("info-banners")}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminTab === "info-banners"
+                ? "bg-emerald-950 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Banner Info Tengah ({infoBanners.length})</span>
+          </button>
+          <button
             onClick={() => setAdminTab("dtf")}
             className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               adminTab === "dtf"
@@ -668,6 +926,28 @@ export default function AdminPanel({
           >
             <Play className="w-3.5 h-3.5" />
             <span>Koleksi Lookbook</span>
+          </button>
+          <button
+            onClick={() => setAdminTab("gallery")}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminTab === "gallery"
+                ? "bg-emerald-950 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Folder className="w-3.5 h-3.5" />
+            <span>Galeri Desain ({galleryDesigns.length})</span>
+          </button>
+          <button
+            onClick={() => setAdminTab("customer-uploads")}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminTab === "customer-uploads"
+                ? "bg-emerald-950 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Folder className="w-3.5 h-3.5 text-red-500" />
+            <span>Penyimpanan Customer ({customerUploads.length})</span>
           </button>
           <button
             onClick={() => setAdminTab("users")}
@@ -855,9 +1135,9 @@ export default function AdminPanel({
                             <img src={img} className="w-full h-full object-cover" />
                             <button 
                               onClick={() => handleRemoveGalleryImage(idx)}
-                              className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-100 transition-opacity shadow-md z-10 cursor-pointer"
                             >
-                              <X className="w-2.5 h-2.5" />
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
@@ -1020,12 +1300,13 @@ export default function AdminPanel({
                     <div className="p-4 md:p-6">
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         {chunk.map((p) => (
-                          <div key={p.id} className="relative group bg-white rounded-2xl border border-slate-150 p-2.5 transition-all hover:shadow-md hover:border-red-200">
+                          <div key={p.id} className="relative group bg-white rounded-2xl border border-slate-150 p-2.5 transition-all hover:shadow-md hover:border-red-200 overflow-hidden">
                             <div className="aspect-[3/4] rounded-xl overflow-hidden mb-2.5 border border-slate-100 bg-slate-50">
                               <img 
                                 src={p.image} 
                                 alt={p.name} 
                                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                referrerPolicy="no-referrer"
                               />
                             </div>
                             
@@ -1036,23 +1317,24 @@ export default function AdminPanel({
                                 <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">STOK: {p.stock}</span>
                               </div>
                             </div>
-
+                            
                             {/* Action Overlay for Hover */}
-                            <div className="absolute inset-0 bg-white/90 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 rounded-2xl p-3">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pilihan Produk</p>
+                            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center gap-2 rounded-2xl p-3 z-10 pointer-events-none group-hover:pointer-events-auto">
                               <button
+                                type="button"
                                 onClick={() => handleEditClick(p)}
                                 className="w-full py-2 bg-emerald-600 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:bg-emerald-700 transition-colors cursor-pointer"
                               >
                                 <Edit className="w-3 h-3" />
-                                EDIT
+                                EDIT PRODUK
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleDeleteClick(p.id, p.name)}
                                 className="w-full py-2 bg-red-600 text-white text-[9px] font-black rounded-lg flex items-center justify-center gap-1.5 shadow-sm hover:bg-red-700 transition-colors cursor-pointer"
                               >
                                 <Trash2 className="w-3 h-3" />
-                                HAPUS
+                                HAPUS PRODUK
                               </button>
                             </div>
                           </div>
@@ -1502,7 +1784,12 @@ export default function AdminPanel({
                             </td>
                             <td className="py-3.5 px-4 text-center">
                               <button
-                                onClick={() => handleDeleteSmallBanner(b.id)}
+                                onClick={() => {
+                                  setConfirmDeleteId(b.id);
+                                  setConfirmDeleteName(b.title || "Foto Slogan");
+                                  setConfirmDeleteType("small-banner");
+                                  setIsConfirmOpen(true);
+                                }}
                                 className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors cursor-pointer inline-flex items-center"
                                 title="Hapus Banner Slogan"
                               >
@@ -1542,7 +1829,12 @@ export default function AdminPanel({
                         </div>
                         <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                           <button
-                            onClick={() => handleDeleteSmallBanner(b.id)}
+                            onClick={() => {
+                              setConfirmDeleteId(b.id);
+                              setConfirmDeleteName(b.title || "Foto Slogan");
+                              setConfirmDeleteType("small-banner");
+                              setIsConfirmOpen(true);
+                            }}
                             className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-bold text-[10px] flex items-center gap-1 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1568,6 +1860,294 @@ export default function AdminPanel({
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider">Live Syncing Banner Slogan</h4>
                 <p className="text-[11px] text-emerald-200 mt-1 leading-relaxed">
                   Semua foto slogan yang Anda post di sini akan ter-update secara otomatis di bawah banner promosi utama, di sebelah teks display **MADE TO MOVE**.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      ) : adminTab === "info-banners" ? (
+        // DYNAMIC INFO BANNER CRUD (THIRD BANNER TYPE)
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form Create/Edit - Left Column */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <h3 className="font-sans font-black text-emerald-950 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>{isEditingInfoBanner ? "Edit Banner Info" : "Tambah Banner Info Baru"}</span>
+                </h3>
+                {isEditingInfoBanner && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingInfoBanner(false);
+                      setEditInfoBannerId(null);
+                      setIbImage("");
+                      setIbTitle("");
+                      setIbSubtitle("");
+                      setIbButtonText("");
+                      setIbButtonUrl("");
+                      setIbBgColor("#dc2626");
+                      setIbTextColor("#ffffff");
+                      setIbIsActive(true);
+                    }}
+                    className="text-[10px] font-black tracking-wider text-red-600 hover:underline uppercase"
+                  >
+                    Batal Edit
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={handleInfoBannerSubmit} className="space-y-4">
+                {/* Image field */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                    Gambar Latar Belakang (Wajib)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-medium"
+                      placeholder="https://..."
+                      value={ibImage}
+                      onChange={(e) => setIbImage(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openMediaModal("info-banner")}
+                      className="px-3 bg-slate-900 text-white rounded-xl text-xs hover:bg-slate-800 transition-colors font-bold whitespace-nowrap cursor-pointer"
+                    >
+                      Pilih Galeri
+                    </button>
+                  </div>
+                  {ibImage && (
+                    <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-150 h-28 bg-slate-100 flex items-center justify-center">
+                      <img src={ibImage} className="w-full h-full object-cover" alt="Preview" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                    Judul Utama Banner
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-medium"
+                    placeholder="Contoh: KUALITAS PRINTING DTF TERBAIK"
+                    value={ibTitle}
+                    onChange={(e) => setIbTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Subtitle */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                    Sub-judul / Deskripsi Singkat
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-medium"
+                    placeholder="Contoh: Menggunakan mesin industri Jepang terbaru & tinta premium..."
+                    value={ibSubtitle}
+                    onChange={(e) => setIbSubtitle(e.target.value)}
+                  />
+                </div>
+
+                {/* Button text and link */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                      Teks Tombol
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-medium"
+                      placeholder="KUSTOM SEKARANG"
+                      value={ibButtonText}
+                      onChange={(e) => setIbButtonText(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                      Link URL Tombol
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 font-medium"
+                      placeholder="#Sablon DTF"
+                      value={ibButtonUrl}
+                      onChange={(e) => setIbButtonUrl(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Background Color & Text Color */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                      Warna Background
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        className="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0 bg-transparent"
+                        value={ibBgColor}
+                        onChange={(e) => setIbBgColor(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg uppercase font-mono font-bold"
+                        value={ibBgColor}
+                        onChange={(e) => setIbBgColor(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                      Warna Teks
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        className="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0 bg-transparent"
+                        value={ibTextColor}
+                        onChange={(e) => setIbTextColor(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-lg uppercase font-mono font-bold"
+                        value={ibTextColor}
+                        onChange={(e) => setIbTextColor(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Aktif */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="ibIsActive"
+                    className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    checked={ibIsActive}
+                    onChange={(e) => setIbIsActive(e.target.checked)}
+                  />
+                  <label htmlFor="ibIsActive" className="text-xs font-extrabold text-slate-700 cursor-pointer select-none">
+                    Tampilkan di Halaman Utama (Aktif)
+                  </label>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-emerald-950 text-white hover:bg-emerald-900 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-md"
+                >
+                  {isEditingInfoBanner ? "Simpan Perubahan" : "Simpan Banner Info"}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* List of existing banners - Right Columns */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <h3 className="font-sans font-black text-emerald-950 text-sm uppercase tracking-wider mb-4">
+                Daftar Banner Info Tengah ({infoBanners.length})
+              </h3>
+
+              {infoBannersLoading ? (
+                <div className="py-12 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-950" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {infoBanners.map((b) => (
+                    <div
+                      key={b.id}
+                      className="border border-slate-200 rounded-2xl p-4 bg-slate-50 flex flex-col justify-between hover:shadow-md transition-shadow"
+                    >
+                      <div className="space-y-3">
+                        <div className="relative rounded-xl overflow-hidden h-36 bg-slate-200 border border-slate-100 flex items-center">
+                          {b.image ? (
+                            <>
+                              <img src={b.image} className="w-full h-full object-cover" alt={b.title} referrerPolicy="no-referrer" />
+                              <div className="absolute inset-0 bg-slate-900/40 flex items-end p-2.5">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase border shadow-sm ${
+                                  b.isActive !== false
+                                    ? "bg-emerald-500 text-white border-emerald-400"
+                                    : "bg-slate-500 text-white border-slate-400"
+                                }`}>
+                                  {b.isActive !== false ? "Aktif" : "Non-aktif"}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-slate-400 text-xs w-full text-center font-bold">Tidak ada gambar</div>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <h4 className="font-extrabold text-emerald-950 text-sm leading-tight line-clamp-1">{b.title}</h4>
+                          {b.subtitle && <p className="text-[11px] text-slate-500 font-semibold line-clamp-2 leading-relaxed">{b.subtitle}</p>}
+                        </div>
+
+                        {/* Styles indicators */}
+                        <div className="flex gap-2 text-[10px] font-bold">
+                          <span className="px-2 py-1 rounded bg-white border border-slate-200 font-mono">
+                            BG: {b.bgColor || "#0f172a"}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white border border-slate-200 font-mono">
+                            Teks: {b.textColor || "#ffffff"}
+                          </span>
+                          {b.buttonText && (
+                            <span className="px-2 py-1 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                              Tombol: {b.buttonText}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => handleEditInfoBanner(b)}
+                          className="px-3 py-1.5 bg-white text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInfoBanner(b.id)}
+                          className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors font-bold text-[10px] flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {infoBanners.length === 0 && (
+                    <div className="py-10 text-center text-slate-400 font-semibold text-xs col-span-2">
+                      Belum ada banner info tengah. Silakan upload menggunakan form di sebelah kiri!
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Live Syncing alert card */}
+            <div className="p-4 bg-emerald-950 text-emerald-100 rounded-2xl flex items-start gap-3.5 border border-emerald-900 shadow-lg">
+              <Eye className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Live Syncing Banner Info Tengah</h4>
+                <p className="text-[11px] text-emerald-200 mt-1 leading-relaxed">
+                  Semua banner info tengah yang berstatus aktif akan ditampilkan secara otomatis di bawah banner slogan **MADE TO MOVE** pada halaman depan toko Anda.
                 </p>
               </div>
             </div>
@@ -1612,7 +2192,17 @@ export default function AdminPanel({
                   {cat.image ? <img src={cat.image} alt={cat.label} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-black text-white flex items-center justify-center font-bold text-xs uppercase">Sale</div>}
                 </div>
                 <div className="font-bold text-xs mb-3 text-center">{cat.label}</div>
-                <button onClick={() => handleDeleteCategory(cat.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold w-full hover:bg-red-100 cursor-pointer">Hapus</button>
+                <button 
+                  onClick={() => {
+                    setConfirmDeleteId(cat.id);
+                    setConfirmDeleteName(cat.label);
+                    setConfirmDeleteType("category");
+                    setIsConfirmOpen(true);
+                  }} 
+                  className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold w-full hover:bg-red-100 cursor-pointer"
+                >
+                  Hapus
+                </button>
               </div>
             ))}
           </div>
@@ -1705,24 +2295,22 @@ export default function AdminPanel({
                   <button
                     disabled={videosLoading}
                     onClick={async () => {
-                      if (confirm("Hapus SEMUA video koleksi lookbook?")) {
-                        setVideosLoading(true);
-                        try {
-                          const res = await fetch("/api/media/all/bulk?type=video", { method: "DELETE" });
-                          if (res.ok) {
-                            setMsg({ text: "Semua video berhasil dihapus.", type: "success" });
-                            setLookbookVideos([]); // Optimistic update
-                            fetchLookbookVideos();
-                          } else {
-                            throw new Error("Gagal menghapus");
-                          }
-                        } catch (error) {
-                          console.error("Delete all failed:", error);
-                          setMsg({ text: "Gagal menghapus semua video.", type: "error" });
-                        } finally {
-                          setVideosLoading(false);
-                          setTimeout(() => setMsg({ text: "", type: "" }), 3000);
+                      setVideosLoading(true);
+                      try {
+                        const res = await fetch("/api/media/all/bulk?type=video", { method: "DELETE" });
+                        if (res.ok) {
+                          setMsg({ text: "Semua video berhasil dihapus.", type: "success" });
+                          setLookbookVideos([]); // Optimistic update
+                          fetchLookbookVideos();
+                        } else {
+                          throw new Error("Gagal menghapus");
                         }
+                      } catch (error) {
+                        console.error("Delete all failed:", error);
+                        setMsg({ text: "Gagal menghapus semua video.", type: "error" });
+                      } finally {
+                        setVideosLoading(false);
+                        setTimeout(() => setMsg({ text: "", type: "" }), 3000);
                       }
                     }}
                     className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${videosLoading ? 'text-slate-400 cursor-not-allowed' : 'text-red-500 hover:text-red-700'}`}
@@ -1755,39 +2343,15 @@ export default function AdminPanel({
                       <p className="text-[9px] text-slate-400 font-medium">Video MP4</p>
                     </div>
                     <button
-                      disabled={deletingIds.includes(v.id)}
-                      onClick={async () => {
-                        console.log("Delete button clicked for video ID:", v.id);
-                        if (confirm("Hapus video ini?")) {
-                          setDeletingIds(prev => [...prev, v.id]);
-                          try {
-                            const res = await fetch(`/api/media/${v.id}`, { method: "DELETE" });
-                            console.log("Delete response status:", res.status);
-                            if (res.ok) {
-                              setMsg({ text: "Video berhasil dihapus.", type: "success" });
-                              setLookbookVideos(prev => prev.filter(item => item.id !== v.id)); // Optimistic UI
-                              fetchLookbookVideos();
-                              setTimeout(() => setMsg({ text: "", type: "" }), 3000);
-                            } else {
-                                const errData = await res.json();
-                                console.error("Delete failed:", errData);
-                                setMsg({ text: "Gagal menghapus video: " + (errData.error || "Unknown error"), type: "error" });
-                            }
-                          } catch (err) {
-                            console.error("Delete error:", err);
-                            setMsg({ text: "Gagal menghapus video.", type: "error" });
-                          } finally {
-                            setDeletingIds(prev => prev.filter(id => id !== v.id));
-                          }
-                        }
+                      onClick={() => {
+                        setConfirmDeleteId(v.id);
+                        setConfirmDeleteName(v.title || "Video Lookbook");
+                        setConfirmDeleteType("video");
+                        setIsConfirmOpen(true);
                       }}
-                      className={`p-2 rounded-lg transition-colors cursor-pointer ${deletingIds.includes(v.id) ? 'bg-slate-100 text-slate-400' : 'hover:bg-red-50 text-red-500'}`}
+                      className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
                     >
-                      {deletingIds.includes(v.id) ? (
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </motion.div>
@@ -1838,6 +2402,30 @@ export default function AdminPanel({
               </div>
             </div>
 
+            <div className="space-y-1.5 pt-2">
+              <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                Gambar Base Mockup Kaos Custom <span className="text-slate-400 font-semibold">(Opsional)</span>
+              </label>
+              <div className="flex gap-2">
+                <ImageUploadButton 
+                  label="Upload Mockup"
+                  currentUrl={dtfMockupUrl}
+                  onUploadSuccess={setDtfMockupUrl}
+                />
+                <button
+                  type="button"
+                  onClick={() => openMediaModal("mockup")}
+                  className="px-4 py-2 bg-emerald-950 text-white rounded-xl text-[10px] font-bold hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Image className="w-3.5 h-3.5" />
+                  <span>GALERI</span>
+                </button>
+              </div>
+              <p className="text-[9px] text-slate-400 font-semibold leading-none mt-1">
+                Gunakan mockup custom Anda sendiri (seperti kaos polo, hoodie, atau t-shirt custom). Kosongkan untuk menggunakan gambar kaos default dinamis dari produk.
+              </p>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
                 Judul Identitas Sablon <span className="text-red-500">*</span>
@@ -1877,6 +2465,111 @@ export default function AdminPanel({
               />
             </div>
 
+            <div className="space-y-1.5 pt-3 border-t border-slate-100">
+              <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                Nomor WhatsApp Admin (Konsultasi Sablon) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+                placeholder="Contoh: 6281219154973"
+                className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+              />
+              <p className="text-[9px] text-slate-400 font-semibold leading-none mt-1">Gunakan format internasional tanpa tanda + atau spasi (Contoh: 6281219154973).</p>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                💵 Tambahan Biaya Ukuran Sablon (Surcharge)
+              </span>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Logo Dada (10x10 cm) (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeLogo}
+                    onChange={(e) => setSurchargeLogo(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Ukuran A5 (15x21 cm) (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeA5}
+                    onChange={(e) => setSurchargeA5(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Ukuran A4 (21x30 cm) (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeA4}
+                    onChange={(e) => setSurchargeA4(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Ukuran A3 (30x42 cm) (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeA3}
+                    onChange={(e) => setSurchargeA3(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                👕 Tambahan Biaya Ukuran Kaos Jumbo
+              </span>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Tambahan Ukuran XXL (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeXXL}
+                    onChange={(e) => setSurchargeXXL(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase block">
+                    Tambahan Ukuran XXXL (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={surchargeXXXL}
+                    onChange={(e) => setSurchargeXXXL(Number(e.target.value))}
+                    className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-mono font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+
             <button
               type="submit"
               className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition-all active:scale-[0.98] cursor-pointer text-center"
@@ -1884,6 +2577,92 @@ export default function AdminPanel({
               Simpan Perubahan Sablon DTF
             </button>
           </form>
+        </div>
+      ) : adminTab === "gallery" ? (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-6">
+          <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wider mb-6 flex items-center gap-2">
+            <Image className="w-4 h-4 text-red-600" />
+            <span>Galeri Desain Pelanggan</span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {galleryDesigns.map((d: any) => (
+              <div key={d.id} className="relative group bg-white rounded-2xl border border-slate-150 p-2 shadow-sm">
+                <div className="aspect-square rounded-xl overflow-hidden mb-2">
+                  <img src={d.imageUrl} alt="Design" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold mb-2 line-clamp-2">{d.note}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmDeleteId(d.id);
+                    setConfirmDeleteName(d.note || "Gambar Galeri");
+                    setConfirmDeleteType("gallery");
+                    setIsConfirmOpen(true);
+                  }}
+                  className="w-full py-2 bg-red-600 text-white text-[10px] font-black rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                >
+                  Hapus
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : adminTab === "customer-uploads" ? (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
+              <Folder className="w-4 h-4 text-red-600 animate-pulse" />
+              <span>Penyimpanan Galeri Khusus Customer (Cloud)</span>
+            </h3>
+            <button
+              onClick={fetchCustomerUploads}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all border border-slate-200"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Segarkan</span>
+            </button>
+          </div>
+
+          {loadingCustomerUploads ? (
+            <div className="py-12 text-center text-slate-400 font-bold text-xs uppercase tracking-widest flex flex-col items-center justify-center gap-3">
+              <RefreshCw className="w-8 h-8 text-red-600 animate-spin" />
+              <span>Memuat data galeri khusus dari Cloud...</span>
+            </div>
+          ) : customerUploads.length === 0 ? (
+            <div className="py-12 border-2 border-dashed border-slate-150 rounded-2xl text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+              Belum ada file di penyimpanan galeri khusus customer.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {customerUploads.map((d: any) => (
+                <div key={d.id} className="relative group bg-white rounded-2xl border border-slate-150 p-3 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="aspect-square rounded-xl overflow-hidden mb-2 bg-slate-50 border border-slate-100 flex items-center justify-center">
+                      <img src={d.imageUrl} alt="Customer Upload" className="w-full h-full object-contain" />
+                    </div>
+                    <p className="text-[10px] text-slate-750 font-black truncate" title={d.fileName || "File Kustom"}>
+                      {d.fileName || "File Tanpa Nama"}
+                    </p>
+                    <p className="text-[8px] text-slate-400 font-bold mb-3">
+                      {d.uploadedAt ? (d.uploadedAt.toDate ? d.uploadedAt.toDate().toLocaleString("id-ID") : new Date(d.uploadedAt).toLocaleString("id-ID")) : "Kustom"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmDeleteId(d.id);
+                      setConfirmDeleteName(d.fileName || "Gambar Kustom");
+                      setConfirmDeleteType("customer-upload");
+                      setIsConfirmOpen(true);
+                    }}
+                    className="w-full py-2 bg-red-600 text-white text-[10px] font-black rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                  >
+                    Hapus Permanen
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ) : adminTab === "users" ? (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -1946,6 +2725,68 @@ export default function AdminPanel({
         onClose={() => setIsMediaModalOpen(false)}
         onSelect={handleMediaSelect}
       />
+
+      {/* Centralized Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isConfirmOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4"
+            >
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto animate-bounce">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-slate-800 text-base uppercase tracking-tight">
+                  {confirmDeleteType === "all-products" ? "Hapus Semua Produk?" : "Hapus Item?"}
+                </h4>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  {confirmDeleteType === "all-products" ? (
+                    <span>Apakah Anda yakin ingin menghapus <strong>semua produk</strong> dari database? Tindakan ini permanen dan tidak dapat dibatalkan.</span>
+                  ) : (
+                    <span>Apakah Anda yakin ingin menghapus <strong>{confirmDeleteName}</strong>? Tindakan ini permanen dan tidak dapat dibatalkan.</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    setIsConfirmOpen(false);
+                    setConfirmDeleteId(null);
+                    setConfirmDeleteName("");
+                  }}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black rounded-xl transition-colors cursor-pointer"
+                >
+                  BATAL
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={executeDelete}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-red-200"
+                >
+                  {isDeleting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>MENGHAPUS...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>YA, HAPUS</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

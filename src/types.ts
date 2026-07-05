@@ -18,6 +18,7 @@ export interface Product {
   description: string;
   rating?: number;
   salesCount?: number;
+  createdAt: number;
   isFlashSale?: boolean;
   isPromo?: boolean;
   groupId?: string;
@@ -58,6 +59,14 @@ export interface DtfSettings {
   identityTitle: string;
   identitySubtitle: string;
   description: string;
+  surchargeLogo?: number;
+  surchargeA5?: number;
+  surchargeA4?: number;
+  surchargeA3?: number;
+  surchargeXXL?: number;
+  surchargeXXXL?: number;
+  whatsappNumber?: string;
+  mockupImage?: string;
 }
 
 export interface Banner {
@@ -75,5 +84,17 @@ export interface SmallBanner {
   title: string;
   subtitle?: string;
   createdAt?: number;
+}
+
+export interface InfoBanner {
+  id: string;
+  image: string;
+  title: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  bgColor?: string;
+  textColor?: string;
+  isActive?: boolean;
 }
 

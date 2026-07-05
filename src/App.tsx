@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { User, Product, CartItem, LogoSettings, HomeMedia, DtfSettings, Banner, SmallBanner } from "./types";
+import { User, Product, CartItem, LogoSettings, HomeMedia, DtfSettings, Banner, SmallBanner, InfoBanner } from "./types";
 import { Tab } from "./types";
 import Topbar from "./components/Topbar";
 import HeroSlider from "./components/HeroSlider";
 import SmallBannerSection from "./components/SmallBannerSection";
+import InfoBannerSection from "./components/InfoBannerSection";
 import FlashSale from "./components/FlashSale";
 import ProductGrid from "./components/ProductGrid";
 import CartDrawer from "./components/CartDrawer";
@@ -47,6 +48,7 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [smallBanners, setSmallBanners] = useState<SmallBanner[]>([]);
+  const [infoBanners, setInfoBanners] = useState<InfoBanner[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState("default");
@@ -119,18 +121,20 @@ export default function App() {
       const headers: any = {};
       if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
 
-      const [logoRes, dtfRes, mediaRes, bannersRes, smallBannersRes] = await Promise.all([
+      const [logoRes, dtfRes, mediaRes, bannersRes, smallBannersRes, infoBannersRes] = await Promise.all([
         fetch("/api/settings/logo", { headers }),
         fetch("/api/settings/dtf", { headers }),
         fetch("/api/settings/homemedia", { headers }),
         fetch("/api/banners", { headers }),
-        fetch("/api/small-banners", { headers })
+        fetch("/api/small-banners", { headers }),
+        fetch("/api/info-banners", { headers })
       ]);
       if (logoRes.ok) setLogoSettings(await logoRes.json());
       if (dtfRes.ok) setDtfSettings(await dtfRes.json());
       if (mediaRes.ok) setHomeMedia(await mediaRes.json());
       if (bannersRes.ok) setBanners(await bannersRes.json());
       if (smallBannersRes.ok) setSmallBanners(await smallBannersRes.json());
+      if (infoBannersRes.ok) setInfoBanners(await infoBannersRes.json());
     } catch (err) {
       console.error("Error fetching settings:", err);
     }
@@ -483,6 +487,8 @@ export default function App() {
         onOpenAdmin={() => setActiveTab("admin")}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenWorkspace={() => setActiveTab("workspace")}
+        onOpenHome={() => { setActiveTab("home"); setCategoryFilter("all"); }}
+        onOpenLookbook={() => setActiveTab("lookbook")}
         currentTheme={theme}
         onThemeChange={handleThemeChange}
       />
@@ -554,6 +560,11 @@ export default function App() {
               <SmallBannerSection smallBanners={smallBanners} />
             )}
 
+            {/* Info Banners (Third banner type) */}
+            {categoryFilter === "all" && searchQuery === "" && (
+              <InfoBannerSection infoBanners={infoBanners} />
+            )}
+
             <div className="max-w-[1400px] mx-auto px-[4vw]">
               {/* Category Circular Navigation Menu */}
               {searchQuery === "" && (
@@ -600,15 +611,14 @@ export default function App() {
               <div className="space-y-6">
                 {logoSettings?.logoUrl ? (
                   <div 
-                    className="h-12 w-auto flex items-center justify-start relative animate-none" 
-                    style={{ mixBlendMode: 'screen' }}
+                    className="h-16 w-auto flex items-center justify-start relative animate-none" 
                   >
                     <img 
                       src={logoSettings.logoUrl} 
                       alt="A-GIN" 
-                      className={logoSettings.logoUrl.includes('a_gin_logo') ? "h-12 w-auto object-contain" : "h-24 w-auto object-cover object-top -mt-4"}
+                      className="h-16 w-auto object-contain"
                       referrerPolicy="no-referrer"
-                      style={logoSettings.logoUrl.includes('a_gin_logo') ? {} : { clipPath: 'inset(10% 0 35% 0)' }}
+                      style={{ filter: 'invert(1) brightness(100)' }}
                     />
                   </div>
                 ) : (

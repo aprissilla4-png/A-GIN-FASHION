@@ -1,7 +1,14 @@
-import { db } from './src/db/index.ts';
-import { media, banners } from './src/db/schema.ts';
-async function test() {
-  console.log("Media:", await db.select().from(media));
-  console.log("Banners:", await db.select().from(banners));
+import { db } from "./src/db/index.ts";
+import { products } from "./src/db/schema.ts";
+
+async function testDb() {
+  try {
+    console.log("Attempting to fetch products...");
+    const allProducts = await db.select().from(products);
+    console.log("Success! Products count:", allProducts.length);
+  } catch (err) {
+    console.error("Database error:", err);
+  }
 }
-test().catch(console.error).finally(() => process.exit(0));
+
+testDb();

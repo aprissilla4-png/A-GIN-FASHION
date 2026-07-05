@@ -24,13 +24,31 @@
       "isAdmin": false
     }
   ],
-  "products": [],
-  "banners": [],
+  "products": [
+    {
+      "id": "p-2",
+      "name": "Kaos Oversize",
+      "price": 95000,
+      "category": "Kaos",
+      "stock": 50,
+      "imageUrl": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=400",
+      "createdAt": 1783186366689
+    }
+  ],
+  "banners": [
+    {
+      "id": "b-1",
+      "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=1200",
+      "title": "Promo Kaos Premium",
+      "subtitle": "Diskon 20%",
+      "createdAt": 1783186365689
+    }
+  ],
   "logoSettings": {
     "text": "A-GIN",
     "highlightText": "FASHION",
     "slogan": "Exclusive Elegance",
-    "logoUrl": "/uploads/a_gin_logo.png"
+    "logoUrl": "/uploads/a_gin_logo_transparent_final.png"
   },
   "dtfSettings": {
     "bannerImage": "/uploads/upload_1783167947523_o7zz0.jpeg",
@@ -48,11 +66,21 @@
     }
   ],
   "media": [],
-  "categories": [
+  "categories": [],
+  "smallBanners": [
     {
-      "id": "KAOS",
-      "label": "KAOS",
-      "image": "/uploads/upload_1783169023621_z8rks.png"
+      "id": "sb-1",
+      "image": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=1000",
+      "title": "MADE TO MOVE",
+      "subtitle": "A-GIN Sportswear Line",
+      "createdAt": 1783186365689
+    },
+    {
+      "id": "sb-2",
+      "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=1000",
+      "title": "MADE TO MOVE",
+      "subtitle": "Streetwear Series 2026",
+      "createdAt": 1783186366689
     }
   ]
 }

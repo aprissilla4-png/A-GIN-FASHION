@@ -1,10 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Geist:wght@300;400&family=Space+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
-  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Global root typography sizing - upscale all text proportionally */
+html {
+  font-size: 17.5px; /* Increase base font size from standard 16px */
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 18.5px; /* Slightly larger on tablets and desktops */
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 19px; /* Even clearer and larger text on wide screens */
+  }
 }
 
 /* Custom scrollbars */

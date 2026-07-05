@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { X, LogOut, User as UserIcon, Shield, Palette } from "lucide-react";
+import { X, LogOut, User as UserIcon, Shield, Palette, Home, Film } from "lucide-react";
 import { User } from "../types";
 
 interface NavigationPopupProps {
@@ -12,6 +12,8 @@ interface NavigationPopupProps {
   onOpenAdmin: () => void;
   onOpenProfile: () => void;
   onOpenWorkspace: () => void;
+  onOpenHome: () => void;
+  onOpenLookbook: () => void;
   currentTheme: string;
   onThemeChange: (theme: string) => void;
 }
@@ -32,6 +34,8 @@ export default function NavigationPopup({
   onOpenAdmin,
   onOpenProfile,
   onOpenWorkspace,
+  onOpenHome,
+  onOpenLookbook,
   currentTheme,
   onThemeChange
 }: NavigationPopupProps) {
@@ -94,6 +98,22 @@ export default function NavigationPopup({
           <div className="space-y-4">
             <p className="text-[0.65rem] font-mono uppercase tracking-widest text-slate-400 font-bold">Menu</p>
             <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => { onOpenHome(); onClose(); }}
+                className="flex flex-col items-center gap-2 p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group cursor-pointer"
+              >
+                <Home className="w-6 h-6 text-slate-400 group-hover:text-[#1B1B1B] transition-colors" />
+                <span className="text-xs font-bold text-slate-600">Home & Shop</span>
+              </button>
+
+              <button 
+                onClick={() => { onOpenLookbook(); onClose(); }}
+                className="flex flex-col items-center gap-2 p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group cursor-pointer"
+              >
+                <Film className="w-6 h-6 text-slate-400 group-hover:text-[#1B1B1B] transition-colors" />
+                <span className="text-xs font-bold text-slate-600">Lookbook</span>
+              </button>
+
               {user && (
                 <>
                   <button 

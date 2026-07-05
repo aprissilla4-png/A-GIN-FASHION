@@ -111,6 +111,37 @@
         "allow read: if true;",
         "allow write: if request.auth != null && request.auth.token.admin == true;"
       ]
+    },
+    {
+      "name": "designs",
+      "description": "Store public custom t-shirt design orders.",
+      "fields": {
+        "id": "string",
+        "imageUrl": "string",
+        "note": "string",
+        "timestamp": "timestamp"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if true;"
+      ]
+    },
+    {
+      "name": "customerUploads",
+      "description": "Store custom uploaded designs by customers in their dedicated galleries.",
+      "fields": {
+        "id": "string",
+        "imageUrl": "string",
+        "fileName": "string",
+        "uploadedAt": "timestamp",
+        "userId": "string",
+        "userEmail": "string",
+        "note": "string"
+      },
+      "rules": [
+        "allow read: if true;",
+        "allow write: if true;"
+      ]
     }
   ]
 }

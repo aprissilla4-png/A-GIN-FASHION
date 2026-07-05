@@ -257,12 +257,12 @@ export default function ProductDetailModal({
             </div>
 
             {/* Product Title */}
-            <h1 className="font-black text-slate-800 text-xl md:text-2xl tracking-tight leading-tight">
+            <h1 className="font-black text-slate-800 text-2xl md:text-3xl tracking-tight leading-tight">
               {product.name}
             </h1>
 
             {/* Ratings & Social Counts */}
-            <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1 bg-amber-50 text-amber-500 px-2.5 py-1 rounded-lg font-extrabold border border-amber-100">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 <span>{product.rating || 4.8} / 5.0</span>
@@ -283,9 +283,9 @@ export default function ProductDetailModal({
 
             {/* Pricing Section */}
             <div className="bg-gradient-to-r from-slate-50 to-slate-100/50 p-5 rounded-2xl border border-slate-200">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Harga Spesial Toko</p>
+              <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1">Harga Spesial Toko</p>
               <div className="flex items-baseline gap-3.5">
-                <span className="text-red-600 font-black text-2xl md:text-3xl tracking-tight">
+                <span className="text-red-600 font-black text-3xl md:text-4xl tracking-tight">
                   Rp {product.price.toLocaleString("id-ID")}
                 </span>
                 {product.originalPrice && (
@@ -294,16 +294,16 @@ export default function ProductDetailModal({
                   </span>
                 )}
               </div>
-              <p className="text-[10px] text-emerald-800 font-bold mt-1">✓ Garansi Produk Original & Bahan Standard Butik premium</p>
+              <p className="text-[12px] text-emerald-800 font-bold mt-1">✓ Garansi Produk Original & Bahan Standard Butik premium</p>
             </div>
 
             {/* SIZE / MODEL SELECTOR (Direct Request Requirement) */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block">
+                <label className="text-sm font-extrabold text-slate-500 uppercase tracking-wider block">
                   Pilih Ukuran Model <span className="text-red-500">*</span>
                 </label>
-                <span className="text-[10px] text-red-600 font-bold">Harap pilih sesuai badan Anda</span>
+                <span className="text-[12px] text-red-600 font-bold">Harap pilih sesuai badan Anda</span>
               </div>
               
               {/* Size Buttons Option */}
@@ -315,7 +315,7 @@ export default function ProductDetailModal({
                       key={size}
                       id={`pdetail-size-${size}`}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-12 h-12 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center border-2 transition-all cursor-pointer active:scale-95 ${
+                      className={`min-w-12 h-12 rounded-xl text-sm font-black uppercase tracking-wider flex items-center justify-center border-2 transition-all cursor-pointer active:scale-95 ${
                         isActive
                           ? "bg-red-600 border-red-600 text-white shadow-md shadow-red-600/10"
                           : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
@@ -326,15 +326,15 @@ export default function ProductDetailModal({
                   );
                 })}
               </div>
-              <p className="text-[9px] text-slate-400 font-medium">Sistem kami akan menerapkan ukuran <span className="font-bold text-slate-600">"{selectedSize}"</span> ini di backend transaksi saat Anda memesan produk.</p>
+              <p className="text-[11px] text-slate-400 font-medium">Sistem kami akan menerapkan ukuran <span className="font-bold text-slate-600">"{selectedSize}"</span> ini di backend transaksi saat Anda memesan produk.</p>
             </div>
 
             <div className="h-px bg-slate-200 my-4" />
 
             {/* Description Paragraph */}
             <div className="space-y-2">
-              <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Deskripsi Busana Lengkap</h4>
-              <p className="text-xs text-slate-600 leading-relaxed max-h-[150px] overflow-y-auto pr-1">
+              <h4 className="text-sm font-extrabold text-slate-500 uppercase tracking-wider">Deskripsi Busana Lengkap</h4>
+              <p className="text-sm text-slate-600 leading-relaxed max-h-[150px] overflow-y-auto pr-1">
                 {product.description}
               </p>
             </div>
@@ -344,19 +344,19 @@ export default function ProductDetailModal({
           <div className="space-y-5 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm mt-4">
             
             {/* Trust Badges row */}
-            <div className="grid grid-cols-2 gap-3 text-[10px] text-slate-600 font-bold">
+            <div className="grid grid-cols-2 gap-3 text-[12px] text-slate-600 font-bold">
               <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <ShieldCheck className="w-4 h-4 text-emerald-800" />
                 <div>
                   <p className="text-slate-800 font-extrabold">Katun Premium</p>
-                  <p className="text-[9px] text-slate-400">Dingin & Awet</p>
+                  <p className="text-[11px] text-slate-400">Dingin & Awet</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <Truck className="w-4 h-4 text-emerald-800" />
                 <div>
                   <p className="text-slate-800 font-extrabold">Bisa COD</p>
-                  <p className="text-[9px] text-slate-400">Kirim Seluruh RI</p>
+                  <p className="text-[11px] text-slate-400">Kirim Seluruh RI</p>
                 </div>
               </div>
             </div>
@@ -368,7 +368,7 @@ export default function ProductDetailModal({
               onClick={() => {
                 onAddToCart(product, selectedSize);
               }}
-              className={`w-full font-black text-xs py-4 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-[0.98] cursor-pointer ${
+              className={`w-full font-black text-sm py-4 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-[0.98] cursor-pointer ${
                 product.stock === 0
                   ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none"
                   : "bg-red-600 hover:bg-red-700 text-white shadow-red-600/20"
@@ -383,7 +383,7 @@ export default function ProductDetailModal({
               </span>
             </button>
             
-            <p className="text-[10px] text-slate-400 font-semibold text-center">
+            <p className="text-[12px] text-slate-400 font-semibold text-center">
               ✓ Amankan barang Anda sekarang sebelum kehabisan stok!
             </p>
           </div>

@@ -69,7 +69,7 @@ export default function ProductGrid({
       {/* Header section to match the image exactly */}
       <div className="flex flex-col md:flex-row justify-between md:items-end border-t border-[#1B1B1B]/10 pt-16 pb-12 mt-16 gap-4">
         <div>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#A68966] font-semibold mb-2">
+          <p className="font-mono text-[0.8rem] uppercase tracking-[0.2em] text-[#A68966] font-semibold mb-2">
             BEST SELLERS
           </p>
           <h3 className="font-serif text-[2.2rem] md:text-[3.2rem] font-light text-[#111111] leading-none">
@@ -78,7 +78,7 @@ export default function ProductGrid({
         </div>
         <button 
           onClick={onResetFilters}
-          className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-[#1B1B1B]/60 hover:text-[#A68966] transition-colors cursor-pointer bg-transparent border-none p-0 text-left"
+          className="font-mono text-[0.8rem] uppercase tracking-[0.15em] text-[#1B1B1B]/60 hover:text-[#A68966] transition-colors cursor-pointer bg-transparent border-none p-0 text-left"
         >
           View All Products →
         </button>
@@ -136,17 +136,17 @@ export default function ProductGrid({
 
                 {/* Details Block */}
                 <div className="space-y-1">
-                  <h4 className="font-sans text-[0.9rem] text-[#111111] font-normal leading-tight tracking-tight group-hover:text-[#A68966] transition-colors truncate">
+                  <h4 className="font-sans text-[1.05rem] text-[#111111] font-normal leading-tight tracking-tight group-hover:text-[#A68966] transition-colors truncate">
                     {p.name}
                   </h4>
                   
                   {/* Rating Section from image */}
                   <div className="flex items-center gap-1.5 py-0.5">
                     <span className="text-[#C19A6B] text-[0.8rem] tracking-tight">{rating.starString}</span>
-                    <span className="text-[#1B1B1B]/40 font-mono text-[0.6rem]">({rating.count})</span>
+                    <span className="text-[#1B1B1B]/40 font-mono text-[0.75rem]">({rating.count})</span>
                   </div>
 
-                  <p className="font-mono text-[0.85rem] text-[#111111] font-semibold">
+                  <p className="font-mono text-[1rem] text-[#111111] font-semibold">
                     Rp {p.price.toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -156,7 +156,7 @@ export default function ProductGrid({
               <button 
                 disabled={p.stock === 0}
                 onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
-                className="mt-4 font-mono text-[0.65rem] uppercase tracking-[0.15em] bg-[#111111] text-white rounded-full py-3 hover:bg-[#111111]/80 transition-colors disabled:opacity-30 w-full cursor-pointer font-bold"
+                className="mt-4 font-mono text-[0.8rem] uppercase tracking-[0.15em] bg-[#111111] text-white rounded-full py-3 hover:bg-[#111111]/80 transition-colors disabled:opacity-30 w-full cursor-pointer font-bold"
               >
                 Add to Bag
               </button>

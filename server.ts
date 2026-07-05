@@ -12,6 +12,7 @@ import { adminAuth, adminDb } from "./src/lib/firebase-admin.ts";
 import { createServer as createViteServer } from "vite";
 
 const PORT = 3000;
+console.log("SQL_HOST:", process.env.SQL_HOST);
 const DB_FILE = path.join(process.cwd(), "db.json");
 
 // Types for DB
@@ -30,6 +31,7 @@ interface Product {
   salesCount?: number;
   isFlashSale?: boolean;
   isPromo?: boolean;
+  createdAt?: number;
 }
 
 interface User {
@@ -61,6 +63,18 @@ interface SmallBanner {
   createdAt?: number;
 }
 
+interface InfoBanner {
+  id: string;
+  image: string;
+  title: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  bgColor?: string;
+  textColor?: string;
+  isActive?: boolean;
+}
+
 interface LogoSettings {
   text: string;
   highlightText: string;
@@ -73,6 +87,14 @@ interface DtfSettings {
   identityTitle: string;
   identitySubtitle: string;
   description: string;
+  surchargeLogo?: number;
+  surchargeA5?: number;
+  surchargeA4?: number;
+  surchargeA3?: number;
+  surchargeXXL?: number;
+  surchargeXXXL?: number;
+  whatsappNumber?: string;
+  mockupImage?: string;
 }
 
 interface HomeMedia {
@@ -114,6 +136,7 @@ interface DatabaseSchema {
   categories?: Category[];
   theme?: string;
   smallBanners?: SmallBanner[];
+  infoBanners?: InfoBanner[];
 }
 
 // Helper to simulate DB
@@ -126,7 +149,8 @@ let dbData: DatabaseSchema = {
   media: [],
   categories: [],
   theme: "default",
-  smallBanners: []
+  smallBanners: [],
+  infoBanners: []
 };
 
 // ... existing helper functions (loadDatabase, saveDatabase) ...
@@ -152,152 +176,99 @@ const INITIAL_SMALL_BANNERS: SmallBanner[] = [
   }
 ];
 
-const INITIAL_PRODUCTS: Product[] = [];
+const INITIAL_PRODUCTS: Product[] = [
+  { id: "p-1", name: "Kaos Polos Premium", price: 75000, category: "Kaos", stock: 100, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=400", description: "Kaos Polos Premium", createdAt: Date.now() },
+  { id: "p-2", name: "Kaos Oversize", price: 95000, category: "Kaos", stock: 50, image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=400", description: "Kaos Oversize", createdAt: Date.now() + 1000 }
+];
 
 // Helper to Load/Save DB
 async function loadDatabase(): Promise<DatabaseSchema> {
-  // Try to load from Firestore first for permanent persistence
-  try {
-    const doc = await adminDb.collection('config').doc('database').get();
-    if (doc.exists) {
-      const data = doc.data() as DatabaseSchema;
-      let updated = false;
-      if (!data.banners) { data.banners = INITIAL_BANNERS; updated = true; }
-      if (!data.logoSettings) { data.logoSettings = { text: "A-GIN", highlightText: "FASHION", slogan: "Exclusive Elegance", logoUrl: "" }; updated = true; }
-      if (!data.dtfSettings) { data.dtfSettings = { bannerImage: "...", identityTitle: "...", identitySubtitle: "...", description: "..." }; updated = true; }
-      if (!data.homeMedia) { data.homeMedia = [ { id: "hm-1", type: "image", url: "...", title: "...", description: "..." }, { id: "hm-2", type: "video", url: "...", title: "...", description: "..." } ]; updated = true; }
-      if (!data.products) { data.products = INITIAL_PRODUCTS; updated = true; }
-      if (!data.media) { data.media = []; updated = true; }
-      if (!data.categories) { data.categories = []; updated = true; }
-      if (!data.smallBanners) { data.smallBanners = INITIAL_SMALL_BANNERS; updated = true; }
-
-      if (updated) {
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-        try {
-          await adminDb.collection('config').doc('database').set(data);
-        } catch (e: any) {
-          if (!e?.message?.includes('PERMISSION_DENIED')) {
-            console.error("Firestore sync failed during Firestore migration:", e?.message || e);
-          }
-        }
-      } else {
-        // Mirror to local file for debugging if needed
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-      }
-      return data;
-    }
-  } catch (err: any) {
-    if (err?.message?.includes('PERMISSION_DENIED')) {
-      console.warn("Firestore access denied (expected in preview environment without ADC). Using local db.json instead.");
-    } else {
-      console.error("Error loading from Firestore, trying local file:", err?.message || err);
-    }
-  }
-
-  if (!fs.existsSync(DB_FILE)) {
-    const adminPasswordHash = crypto.createHash("sha256").update("admin123").digest("hex");
-    const defaultDB: DatabaseSchema = {
-      users: [
-        {
-          id: "usr-admin",
-          name: "Admin Tokopedia Fashion",
-          email: "admin@fashion.com",
-          passwordHash: adminPasswordHash,
-          isAdmin: true,
-          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
-        }
-      ],
-      products: INITIAL_PRODUCTS,
-      banners: INITIAL_BANNERS,
-      logoSettings: {
-        text: "A-GIN",
-        highlightText: "FASHION",
-        slogan: "Exclusive Elegance",
-        logoUrl: ""
-      },
-      dtfSettings: {
-        bannerImage: "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400",
-        identityTitle: "A-GIN DTF & SABLON PREMIUM",
-        identitySubtitle: "Hasil Cetak Detail Tinggi, Elastis, dan Tahan Cuci",
-        description: "Layanan sablon Digital Transfer Film (DTF) premium untuk kaos polos premium. Kami menggunakan tinta original Jepang menghasilkan kualitas cetakan warna cerah, detail presisi, dan tidak retak walau dicuci berkali-kali. Sempurna untuk custom kaos komunitas, distro, maupun harian."
-      },
-      homeMedia: [
-        {
-          id: "hm-1",
-          type: "image",
-          url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600",
-          title: "Suasana Workshop Butik Utama A-GIN FASHION",
-          description: "Kami menjamin kerapian jahitan, kontrol kualitas ganda, serta pengemasan premium untuk kepuasan Anda."
-        },
-        {
-          id: "hm-2",
-          type: "video",
-          url: "https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40176-large.mp4",
-          title: "Video Preview Fashion Show & Koleksi Ramadhan",
-          description: "Video eksklusif keanggunan gaun wanita dan streetwear modern."
-        }
-      ],
-      media: [],
-      categories: [],
-      theme: "default",
-      smallBanners: INITIAL_SMALL_BANNERS
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDB, null, 2), "utf-8");
-    // Seed Firestore
+  // Load from local file
+  if (fs.existsSync(DB_FILE)) {
     try {
-      await adminDb.collection('config').doc('database').set(defaultDB);
-    } catch (e: any) {
-      if (!e?.message?.includes('PERMISSION_DENIED')) {
-        console.error("Initial Firestore seed failed", e?.message || e);
-      }
+      const data = JSON.parse(fs.readFileSync(DB_FILE, "utf-8")) as DatabaseSchema;
+      return data;
+    } catch (err) {
+      console.error("Error parsing local db.json:", err);
     }
-    return defaultDB;
   }
 
-  try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
-    const data = JSON.parse(raw);
-    let updated = false;
-    
-    // Auto-migrate logic
-    if (!data.banners) { data.banners = INITIAL_BANNERS; updated = true; }
-    if (!data.logoSettings) { data.logoSettings = { text: "A-GIN", highlightText: "FASHION", slogan: "Exclusive Elegance", logoUrl: "" }; updated = true; }
-    if (!data.dtfSettings) { data.dtfSettings = { bannerImage: "...", identityTitle: "...", identitySubtitle: "...", description: "..." }; updated = true; }
-    if (!data.homeMedia) { data.homeMedia = [ { id: "hm-1", type: "image", url: "...", title: "...", description: "..." }, { id: "hm-2", type: "video", url: "...", title: "...", description: "..." } ]; updated = true; }
-    if (!data.products) { data.products = INITIAL_PRODUCTS; updated = true; }
-    if (!data.media) { data.media = []; updated = true; }
-    if (!data.categories) { data.categories = []; updated = true; }
-    if (!data.smallBanners) { data.smallBanners = INITIAL_SMALL_BANNERS; updated = true; }
-
-    if (updated) {
-      fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-      try {
-        await adminDb.collection('config').doc('database').set(data);
-      } catch (e: any) {
-        if (!e?.message?.includes('PERMISSION_DENIED')) console.error("Firestore sync failed during migration:", e?.message || e);
+  // Fallback to defaults if file missing or corrupt
+  const adminPasswordHash = crypto.createHash("sha256").update("admin123").digest("hex");
+  const defaultDB: DatabaseSchema = {
+    users: [
+      {
+        id: "usr-admin",
+        name: "Admin Tokopedia Fashion",
+        email: "admin@fashion.com",
+        passwordHash: adminPasswordHash,
+        isAdmin: true,
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
       }
-    }
-    
-    return data;
-  } catch (error) {
-    console.error("Error reading local database, resetting...", error);
-    const fallback = { users: [], products: INITIAL_PRODUCTS, banners: INITIAL_BANNERS, logoSettings: { text: "A-GIN", highlightText: "FASHION", slogan: "Exclusive Elegance", logoUrl: "" }, homeMedia: [], media: [], categories: [], theme: "default", smallBanners: INITIAL_SMALL_BANNERS };
-    return fallback;
-  }
+    ],
+    products: INITIAL_PRODUCTS,
+    banners: INITIAL_BANNERS,
+    logoSettings: {
+      text: "A-GIN",
+      highlightText: "FASHION",
+      slogan: "Exclusive Elegance",
+      logoUrl: "/uploads/a_gin_logo_transparent_final.png"
+    },
+    dtfSettings: {
+      bannerImage: "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400",
+      identityTitle: "A-GIN DTF & SABLON PREMIUM",
+      identitySubtitle: "Hasil Cetak Detail Tinggi, Elastis, dan Tahan Cuci",
+      description: "Layanan sablon Digital Transfer Film (DTF) premium untuk kaos polos premium. Kami menggunakan tinta original Jepang menghasilkan kualitas cetakan warna cerah, detail presisi, dan tidak retak walau dicuci berkali-kali. Sempurna untuk custom kaos komunitas, distro, maupun harian.",
+      surchargeLogo: 10000,
+      surchargeA5: 20000,
+      surchargeA4: 35000,
+      surchargeA3: 55000,
+      surchargeXXL: 10000,
+      surchargeXXXL: 15000,
+      whatsappNumber: "6281219154973",
+      mockupImage: ""
+    },
+    homeMedia: [
+      {
+        id: "hm-1",
+        type: "image",
+        url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=600",
+        title: "Suasana Workshop Butik Utama A-GIN FASHION",
+        description: "Kami menjamin kerapian jahitan, kontrol kualitas ganda, serta pengemasan premium untuk kepuasan Anda."
+      },
+      {
+        id: "hm-2",
+        type: "video",
+        url: "https://assets.mixkit.co/videos/preview/mixkit-fashion-woman-with-silver-glitter-makeup-40176-large.mp4",
+        title: "Video Preview Fashion Show & Koleksi Ramadhan",
+        description: "Video eksklusif keanggunan gaun wanita dan streetwear modern."
+      }
+    ],
+    media: [],
+    categories: [],
+    theme: "default",
+    smallBanners: INITIAL_SMALL_BANNERS,
+    infoBanners: [
+      {
+        id: "ib-1",
+        image: "https://images.unsplash.com/photo-1540759786422-c60d5ed57d7b?auto=format&fit=crop&q=80&w=1400",
+        title: "KUALITAS PRINTING DTF TERBAIK SE-INDONESIA",
+        subtitle: "Menggunakan mesin industri Jepang terbaru & tinta premium. Warna lebih pekat, elastisitas tinggi tanpa retak walau dicuci ratusan kali!",
+        buttonText: "KUSTOM SEKARANG",
+        buttonUrl: "#Sablon DTF",
+        bgColor: "#dc2626",
+        textColor: "#ffffff",
+        isActive: true
+      }
+    ]
+  };
+
+  fs.writeFileSync(DB_FILE, JSON.stringify(defaultDB, null, 2), "utf-8");
+  return defaultDB;
 }
 
 async function saveDatabase(data: DatabaseSchema) {
-  // Sync to Firestore for absolute persistence across container restarts
-  try {
-    await adminDb.collection('config').doc('database').set(data);
-  } catch (err: any) {
-    if (err?.message?.includes('PERMISSION_DENIED')) {
-      // expected in preview environment
-    } else {
-      console.error("Firestore sync failed:", err?.message || err);
-    }
-  }
-  // Sync to local file as well
+  // Sync to local file
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
 
@@ -313,9 +284,9 @@ async function startServer() {
     if (!dbData.logoSettings) {
       dbData.logoSettings = { text: "A-GIN", highlightText: "FASHION", slogan: "Exclusive Elegance", logoUrl: "" };
     }
-    dbData.logoSettings.logoUrl = "/uploads/a_gin_logo.png";
+    dbData.logoSettings.logoUrl = "/uploads/a_gin_logo_transparent_final.png";
     await saveDatabase(dbData);
-    console.log("Successfully set startup logo settings to use /uploads/a_gin_logo.png");
+    console.log("Successfully set startup logo settings to use /uploads/a_gin_logo_transparent_final.png");
   } catch (err: any) {
     console.error("Failed startup logo settings migration:", err.message);
   }
@@ -323,21 +294,39 @@ async function startServer() {
   // Helper to sync user from Firebase to Cloud SQL
   const getOrCreateDBUser = async (decodedToken: any) => {
     const { uid, email, name, picture } = decodedToken;
-    const existing = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
-    
-    if (existing.length > 0) {
-      return existing[0];
+    try {
+      const existing = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
+      
+      if (existing.length > 0) {
+        return existing[0];
+      }
+      
+      const [newUser] = await db.insert(users).values({
+        uid,
+        email: email || "",
+        name: name || email?.split('@')[0] || "User",
+        avatarUrl: picture || "",
+        isAdmin: email === "aprhyzsilla1@gmail.com",
+      }).returning();
+      
+      return newUser;
+    } catch (sqlErr) {
+      console.warn("SQL database error in getOrCreateDBUser, falling back to local storage:", sqlErr);
+      const dbData = await loadDatabase();
+      let user = dbData.users.find(u => u.id === uid || u.email === email);
+      if (!user) {
+        user = {
+          id: uid,
+          name: name || email?.split('@')[0] || "User",
+          email: email || "",
+          isAdmin: email === "aprhyzsilla1@gmail.com",
+          avatarUrl: picture || "",
+        };
+        dbData.users.push(user);
+        await saveDatabase(dbData);
+      }
+      return user;
     }
-    
-    const [newUser] = await db.insert(users).values({
-      uid,
-      email: email || "",
-      name: name || email?.split('@')[0] || "User",
-      avatarUrl: picture || "",
-      isAdmin: email === "aprhyzsilla1@gmail.com",
-    }).returning();
-    
-    return newUser;
   };
 
   // Workspace API Proxy Routes
@@ -481,8 +470,8 @@ async function startServer() {
 
   app.get("/api/products", async (req, res) => {
     try {
-      const allProducts = await db.select().from(products).orderBy(desc(products.createdAt));
-      res.json(allProducts);
+      const dbData = await loadDatabase();
+      res.json(dbData.products);
     } catch (err) {
       console.error("Fetch products error:", err);
       res.status(500).json({ error: "Gagal memuat produk" });
@@ -496,15 +485,118 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // API - DTF - SAVE DESIGN
+  app.post("/api/save-design", async (req, res) => {
+    try {
+      const { 
+        designImage, 
+        productName, 
+        selectedSize, 
+        designSize, 
+        isBackView, 
+        shippingData 
+      } = req.body;
+      
+      const designId = "save-" + Date.now();
+      
+      await adminDb.collection('SavedDesigns').doc(designId).set({
+        designImage,
+        productName,
+        selectedSize,
+        designSize,
+        isBackView,
+        shippingData,
+        createdAt: new Date().toISOString(),
+        status: 'pending'
+      });
+      
+      res.json({ success: true, designId });
+    } catch (err: any) {
+      console.error("Save design error:", err);
+      res.status(500).json({ error: "Gagal menyimpan desain" });
+    }
+  });
+
+  // API - Auth - LOGIN (Email/Password)
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const dbData = await loadDatabase();
+      
+      const user = dbData.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        // Simple auto-registration if user doesn't exist
+        const newUser = {
+          id: "usr-" + Date.now(),
+          name: email.split("@")[0],
+          email: email.toLowerCase(),
+          passwordHash: crypto.createHash("sha256").update(password).digest("hex"),
+          isAdmin: email.toLowerCase() === "aprhyzsilla1@gmail.com",
+          avatarUrl: ""
+        };
+        dbData.users.push(newUser);
+        await saveDatabase(dbData);
+        res.cookie("sid", newUser.id, { httpOnly: true, secure: true, sameSite: "strict" });
+        return res.json({
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          isAdmin: newUser.isAdmin,
+          avatarUrl: newUser.avatarUrl
+        });
+      }
+
+      // Check password
+      const hash = crypto.createHash("sha256").update(password).digest("hex");
+      if (user.passwordHash !== hash) {
+        return res.status(401).json({ error: "Email atau password salah." });
+      }
+
+      res.cookie("sid", user.id, { httpOnly: true, secure: true, sameSite: "strict" });
+      res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        avatarUrl: user.avatarUrl
+      });
+    } catch (err: any) {
+      console.error("Login error:", err);
+      res.status(500).json({ error: "Gagal memproses login." });
+    }
+  });
+
+  // API - Auth - SOCIAL (Google/FB/TikTok)
+  app.post("/api/auth/social", async (req, res) => {
+    try {
+      const { name, email, avatarUrl } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Email wajib ada untuk login sosial." });
+      }
+
+      const loggedUser = await registerOrUpdateSocialUser(name || email.split("@")[0], email, avatarUrl || "");
+      res.cookie("sid", loggedUser.id, { httpOnly: true, secure: true, sameSite: "strict" });
+      res.json({
+        id: loggedUser.id,
+        name: loggedUser.name,
+        email: loggedUser.email,
+        isAdmin: loggedUser.isAdmin,
+        avatarUrl: loggedUser.avatarUrl || ""
+      });
+    } catch (err: any) {
+      console.error("Social login error:", err);
+      res.status(500).json({ error: "Gagal memproses login sosial." });
+    }
+  });
+
   // API - Media - GET ALL
   app.get("/api/media", async (req, res) => {
     const { type } = req.query;
     try {
-      let items;
+      const dbData = await loadDatabase();
+      let items = dbData.media || [];
       if (type) {
-        items = await db.select().from(media).where(eq(media.type, type as string));
-      } else {
-        items = await db.select().from(media);
+        items = items.filter(item => item.type === type);
       }
       res.json(items);
     } catch (err) {
@@ -520,15 +612,34 @@ async function startServer() {
       return res.status(400).json({ error: "URL dan tipe media wajib diisi." });
     }
     
+    const mediaId = "med-" + Date.now();
+    const mediaData = {
+      id: mediaId,
+      type: type === "video" ? ("video" as const) : ("image" as const),
+      url,
+      title: title || "",
+      createdAt: Date.now()
+    };
+
     try {
-      const [newMedia] = await db.insert(media).values({
-        id: "med-" + Date.now(),
-        type: type === "video" ? "video" : "image",
-        url,
-        title: title || "",
-        description: ""
-      }).returning();
-      res.status(201).json(newMedia);
+      try {
+        await db.insert(media).values({
+          id: mediaId,
+          type: mediaData.type,
+          url: mediaData.url,
+          title: mediaData.title,
+          description: ""
+        });
+      } catch (sqlErr) {
+        console.warn("SQL database error in POST /api/media, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.media) dbData.media = [];
+      dbData.media.push(mediaData);
+      await saveDatabase(dbData);
+
+      res.status(201).json(mediaData);
     } catch (err) {
       console.error("Create media error:", err);
       res.status(500).json({ error: "Gagal membuat media" });
@@ -539,11 +650,23 @@ async function startServer() {
   app.delete("/api/media/all/bulk", async (req, res) => {
     const { type } = req.query;
     try {
-      if (type) {
-        await db.delete(media).where(eq(media.type, type as string));
-      } else {
-        await db.delete(media);
+      try {
+        if (type) {
+          await db.delete(media).where(eq(media.type, type as string));
+        } else {
+          await db.delete(media);
+        }
+      } catch (sqlErr) {
+        console.warn("SQL database error in bulk DELETE /api/media/all/bulk, proceeding with local fallback:", sqlErr);
       }
+
+      const dbData = await loadDatabase();
+      if (type) {
+        dbData.media = (dbData.media || []).filter(m => m.type !== type);
+      } else {
+        dbData.media = [];
+      }
+      await saveDatabase(dbData);
       res.json({ success: true, message: "Semua media berhasil dihapus." });
     } catch (err) {
       console.error("Delete bulk media error:", err);
@@ -555,10 +678,15 @@ async function startServer() {
   app.delete("/api/media/:id", async (req, res) => {
     const { id } = req.params;
     try {
-      const deleted = await db.delete(media).where(eq(media.id, id)).returning();
-      if (deleted.length === 0) {
-        return res.status(404).json({ error: "Media tidak ditemukan." });
+      try {
+        await db.delete(media).where(eq(media.id, id));
+      } catch (sqlErr) {
+        console.warn("SQL database error in DELETE /api/media/:id, proceeding with local fallback:", sqlErr);
       }
+
+      const dbData = await loadDatabase();
+      dbData.media = (dbData.media || []).filter((m: any) => m.id !== id);
+      await saveDatabase(dbData);
       res.json({ success: true, message: "Media berhasil dihapus." });
     } catch (err) {
       console.error("Delete media error:", err);
@@ -631,11 +759,112 @@ async function startServer() {
     }
   });
 
+  // API - Info Banners (Third Banner Type) - GET ALL
+  app.get("/api/info-banners", async (req, res) => {
+    try {
+      const dbData = await loadDatabase();
+      res.json(dbData.infoBanners || []);
+    } catch (err) {
+      console.error("Get info banners error:", err);
+      res.status(500).json({ error: "Gagal memuat banner info" });
+    }
+  });
+
+  // API - Info Banners - CREATE
+  app.post("/api/info-banners", async (req, res) => {
+    try {
+      const { image, title, subtitle, buttonText, buttonUrl, bgColor, textColor, isActive } = req.body;
+      if (!image || !title) {
+        return res.status(400).json({ error: "Gambar dan Judul wajib diisi." });
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.infoBanners) {
+        dbData.infoBanners = [];
+      }
+
+      const newInfoBanner: InfoBanner = {
+        id: "ib-" + Date.now(),
+        image,
+        title,
+        subtitle: subtitle || "",
+        buttonText: buttonText || "",
+        buttonUrl: buttonUrl || "",
+        bgColor: bgColor || "#dc2626",
+        textColor: textColor || "#ffffff",
+        isActive: isActive !== undefined ? Boolean(isActive) : true
+      };
+
+      dbData.infoBanners.push(newInfoBanner);
+      await saveDatabase(dbData);
+      res.status(201).json(newInfoBanner);
+    } catch (err) {
+      console.error("Create info banner error:", err);
+      res.status(500).json({ error: "Gagal menambahkan banner info" });
+    }
+  });
+
+  // API - Info Banners - UPDATE
+  app.put("/api/info-banners/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { image, title, subtitle, buttonText, buttonUrl, bgColor, textColor, isActive } = req.body;
+
+      const dbData = await loadDatabase();
+      if (!dbData.infoBanners) dbData.infoBanners = [];
+
+      const idx = dbData.infoBanners.findIndex((b: any) => b.id === id);
+      if (idx === -1) {
+        return res.status(404).json({ error: "Banner info tidak ditemukan." });
+      }
+
+      dbData.infoBanners[idx] = {
+        ...dbData.infoBanners[idx],
+        image: image !== undefined ? image : dbData.infoBanners[idx].image,
+        title: title !== undefined ? title : dbData.infoBanners[idx].title,
+        subtitle: subtitle !== undefined ? subtitle : dbData.infoBanners[idx].subtitle,
+        buttonText: buttonText !== undefined ? buttonText : dbData.infoBanners[idx].buttonText,
+        buttonUrl: buttonUrl !== undefined ? buttonUrl : dbData.infoBanners[idx].buttonUrl,
+        bgColor: bgColor !== undefined ? bgColor : dbData.infoBanners[idx].bgColor,
+        textColor: textColor !== undefined ? textColor : dbData.infoBanners[idx].textColor,
+        isActive: isActive !== undefined ? Boolean(isActive) : dbData.infoBanners[idx].isActive
+      };
+
+      await saveDatabase(dbData);
+      res.json(dbData.infoBanners[idx]);
+    } catch (err) {
+      console.error("Update info banner error:", err);
+      res.status(500).json({ error: "Gagal memperbarui banner info" });
+    }
+  });
+
+  // API - Info Banners - DELETE
+  app.delete("/api/info-banners/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const dbData = await loadDatabase();
+      if (!dbData.infoBanners) dbData.infoBanners = [];
+
+      const initialLength = dbData.infoBanners.length;
+      dbData.infoBanners = dbData.infoBanners.filter((b: any) => b.id !== id);
+
+      if (dbData.infoBanners.length === initialLength) {
+        return res.status(404).json({ error: "Banner info tidak ditemukan." });
+      }
+
+      await saveDatabase(dbData);
+      res.json({ success: true, message: "Banner info berhasil dihapus." });
+    } catch (err) {
+      console.error("Delete info banner error:", err);
+      res.status(500).json({ error: "Gagal menghapus banner info" });
+    }
+  });
+
   // API - Banners - GET ALL
   app.get("/api/banners", async (req, res) => {
     try {
-      const allBanners = await db.select().from(banners);
-      res.json(allBanners);
+      const dbData = await loadDatabase();
+      res.json(dbData.banners);
     } catch (err) {
       res.status(500).json({ error: "Gagal memuat banner" });
     }
@@ -648,16 +877,29 @@ async function startServer() {
       return res.status(400).json({ error: "Kolom Gambar dan Judul wajib diisi." });
     }
     
+    const bannerId = "slide-" + Date.now();
+    const bannerData = {
+      id: bannerId,
+      image,
+      title,
+      subtitle: subtitle || "",
+      badge: badge || "Rilis Terbaru 2026",
+      bgColor: bgColor || "from-slate-900/70 to-slate-900/30"
+    };
+
     try {
-      const [newBanner] = await db.insert(banners).values({
-        id: "slide-" + Date.now(),
-        image,
-        title,
-        subtitle: subtitle || "",
-        badge: badge || "Rilis Terbaru 2026",
-        bgColor: bgColor || "from-slate-900/70 to-slate-900/30"
-      }).returning();
-      res.status(201).json(newBanner);
+      try {
+        await db.insert(banners).values(bannerData);
+      } catch (sqlErr) {
+        console.warn("SQL database error in POST /api/banners, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.banners) dbData.banners = [];
+      dbData.banners.push(bannerData);
+      await saveDatabase(dbData);
+      
+      res.status(201).json(bannerData);
     } catch (err) {
       console.error("Create banner error:", err);
       res.status(500).json({ error: "Gagal membuat banner" });
@@ -670,18 +912,36 @@ async function startServer() {
     const { image, title, subtitle, badge, bgColor } = req.body;
     
     try {
-      const [updatedBanner] = await db.update(banners).set({
-        image,
-        title,
-        subtitle,
-        badge,
-        bgColor
-      }).where(eq(banners.id, id)).returning();
-      
-      if (!updatedBanner) {
+      try {
+        await db.update(banners).set({
+          image,
+          title,
+          subtitle,
+          badge,
+          bgColor
+        }).where(eq(banners.id, id));
+      } catch (sqlErr) {
+        console.warn("SQL database error in PUT /api/banners/:id, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.banners) dbData.banners = [];
+      const index = dbData.banners.findIndex((b: any) => b.id === id);
+      if (index === -1) {
         return res.status(404).json({ error: "Banner tidak ditemukan." });
       }
-      res.json(updatedBanner);
+      
+      dbData.banners[index] = {
+        ...dbData.banners[index],
+        image: image !== undefined ? image : dbData.banners[index].image,
+        title: title !== undefined ? title : dbData.banners[index].title,
+        subtitle: subtitle !== undefined ? subtitle : dbData.banners[index].subtitle,
+        badge: badge !== undefined ? badge : dbData.banners[index].badge,
+        bgColor: bgColor !== undefined ? bgColor : dbData.banners[index].bgColor
+      };
+      
+      await saveDatabase(dbData);
+      res.json(dbData.banners[index]);
     } catch (err) {
       console.error("Update banner error:", err);
       res.status(500).json({ error: "Gagal memperbarui banner" });
@@ -693,10 +953,15 @@ async function startServer() {
     const { id } = req.params;
     
     try {
-      const deleted = await db.delete(banners).where(eq(banners.id, id)).returning();
-      if (deleted.length === 0) {
-        return res.status(404).json({ error: "Banner tidak ditemukan." });
+      try {
+        await db.delete(banners).where(eq(banners.id, id));
+      } catch (sqlErr) {
+        console.warn("SQL database error in DELETE /api/banners/:id, proceeding with local fallback:", sqlErr);
       }
+
+      const dbData = await loadDatabase();
+      dbData.banners = dbData.banners.filter((b: any) => b.id !== id);
+      await saveDatabase(dbData);
       res.json({ success: true, message: "Banner berhasil dihapus." });
     } catch (err) {
       console.error("Delete banner error:", err);
@@ -772,24 +1037,53 @@ async function startServer() {
       return res.status(400).json({ error: "Field utama wajib diisi." });
     }
 
+    const productId = "prod-" + Date.now();
+    const productData = {
+      id: productId,
+      name,
+      price: Number(price),
+      originalPrice: originalPrice ? Number(originalPrice) : undefined,
+      image: image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=600",
+      images: images || [],
+      sizes: sizes || ["S", "M", "L", "XL"],
+      category,
+      stock: Number(stock),
+      description,
+      rating: 5.0,
+      salesCount: 0,
+      isFlashSale: Boolean(isFlashSale),
+      isPromo: Boolean(isPromo),
+      createdAt: Date.now()
+    };
+
     try {
-      const newProduct = await db.insert(products).values({
-        id: "prod-" + Date.now(),
-        name,
-        price: price.toString(),
-        originalPrice: originalPrice ? originalPrice.toString() : undefined,
-        image: image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=600",
-        images: images ? JSON.stringify(images) : undefined,
-        sizes: sizes ? JSON.stringify(sizes) : undefined,
-        category,
-        stock: Number(stock),
-        description,
-        rating: '5.0',
-        salesCount: 0,
-        isFlashSale: Boolean(isFlashSale),
-        isPromo: Boolean(isPromo)
-      }).returning();
-      res.status(201).json(newProduct[0]);
+      try {
+        await db.insert(products).values({
+          id: productId,
+          name,
+          price: price.toString(),
+          originalPrice: originalPrice ? originalPrice.toString() : undefined,
+          image: productData.image,
+          images: images ? JSON.stringify(images) : undefined,
+          sizes: sizes ? JSON.stringify(sizes) : undefined,
+          category,
+          stock: Number(stock),
+          description,
+          rating: '5.0',
+          salesCount: 0,
+          isFlashSale: Boolean(isFlashSale),
+          isPromo: Boolean(isPromo)
+        });
+      } catch (sqlErr) {
+        console.warn("SQL database error in POST /api/products, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.products) dbData.products = [];
+      dbData.products.push(productData);
+      await saveDatabase(dbData);
+
+      res.status(201).json(productData);
     } catch (err) {
       console.error("Create product error:", err);
       res.status(500).json({ error: "Gagal menyimpan produk." });
@@ -802,38 +1096,70 @@ async function startServer() {
     const { name, price, originalPrice, image, images, sizes, category, stock, description, isFlashSale, isPromo } = req.body;
     
     try {
-        const [updatedProduct] = await db.update(products).set({
-            name,
-            price: price?.toString(),
-            originalPrice: originalPrice?.toString(),
-            image,
-            images: images ? JSON.stringify(images) : undefined,
-            sizes: sizes ? JSON.stringify(sizes) : undefined,
-            category,
-            stock: stock !== undefined ? Number(stock) : undefined,
-            description,
-            isFlashSale: isFlashSale !== undefined ? Boolean(isFlashSale) : undefined,
-            isPromo: isPromo !== undefined ? Boolean(isPromo) : undefined
-        }).where(eq(products.id, id)).returning();
-        
-        if (!updatedProduct) {
-            return res.status(404).json({ error: "Produk tidak ditemukan." });
-        }
-        res.json(updatedProduct);
+      try {
+        await db.update(products).set({
+          name,
+          price: price?.toString(),
+          originalPrice: originalPrice?.toString(),
+          image,
+          images: images ? JSON.stringify(images) : undefined,
+          sizes: sizes ? JSON.stringify(sizes) : undefined,
+          category,
+          stock: stock !== undefined ? Number(stock) : undefined,
+          description,
+          isFlashSale: isFlashSale !== undefined ? Boolean(isFlashSale) : undefined,
+          isPromo: isPromo !== undefined ? Boolean(isPromo) : undefined
+        }).where(eq(products.id, id));
+      } catch (sqlErr) {
+        console.warn("SQL database error in PUT /api/products/:id, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      if (!dbData.products) dbData.products = [];
+      const index = dbData.products.findIndex((p: any) => p.id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: "Produk tidak ditemukan." });
+      }
+
+      dbData.products[index] = {
+        ...dbData.products[index],
+        name: name !== undefined ? name : dbData.products[index].name,
+        price: price !== undefined ? Number(price) : dbData.products[index].price,
+        originalPrice: originalPrice !== undefined ? (originalPrice ? Number(originalPrice) : undefined) : dbData.products[index].originalPrice,
+        image: image !== undefined ? image : dbData.products[index].image,
+        images: images !== undefined ? images : dbData.products[index].images,
+        sizes: sizes !== undefined ? sizes : dbData.products[index].sizes,
+        category: category !== undefined ? category : dbData.products[index].category,
+        stock: stock !== undefined ? Number(stock) : dbData.products[index].stock,
+        description: description !== undefined ? description : dbData.products[index].description,
+        isFlashSale: isFlashSale !== undefined ? Boolean(isFlashSale) : dbData.products[index].isFlashSale,
+        isPromo: isPromo !== undefined ? Boolean(isPromo) : dbData.products[index].isPromo
+      };
+
+      await saveDatabase(dbData);
+      res.json(dbData.products[index]);
     } catch (err) {
-        console.error("Update product error:", err);
-        res.status(500).json({ error: "Gagal memperbarui produk." });
+      console.error("Update product error:", err);
+      res.status(500).json({ error: "Gagal memperbarui produk." });
     }
   });
 
   // API - Products - DELETE ALL
   app.delete("/api/products", async (req, res) => {
     try {
+      try {
         await db.delete(products);
-        res.json({ success: true, message: "Semua produk berhasil dihapus." });
+      } catch (sqlErr) {
+        console.warn("SQL database error in DELETE /api/products, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      dbData.products = [];
+      await saveDatabase(dbData);
+      res.json({ success: true, message: "Semua produk berhasil dihapus." });
     } catch (err) {
-        console.error("Delete all products error:", err);
-        res.status(500).json({ error: "Gagal menghapus semua produk." });
+      console.error("Delete all products error:", err);
+      res.status(500).json({ error: "Gagal menghapus semua produk." });
     }
   });
 
@@ -842,11 +1168,19 @@ async function startServer() {
     const { id } = req.params;
     
     try {
+      try {
         await db.delete(products).where(eq(products.id, id));
-        res.json({ success: true, message: "Produk berhasil dihapus." });
+      } catch (sqlErr) {
+        console.warn("SQL database error in DELETE /api/products/:id, proceeding with local fallback:", sqlErr);
+      }
+
+      const dbData = await loadDatabase();
+      dbData.products = dbData.products.filter((p: any) => p.id !== id);
+      await saveDatabase(dbData);
+      res.json({ success: true, message: "Produk berhasil dihapus." });
     } catch (err) {
-        console.error("Delete product error:", err);
-        res.status(500).json({ error: "Gagal menghapus produk." });
+      console.error("Delete product error:", err);
+      res.status(500).json({ error: "Gagal menghapus produk." });
     }
   });
 
@@ -888,7 +1222,7 @@ async function startServer() {
         text: "A-GIN",
         highlightText: "FASHION",
         slogan: "Exclusive Elegance",
-        logoUrl: ""
+        logoUrl: "/uploads/a_gin_logo_transparent_final.png"
       });
     } catch (err: any) {
       console.error("Get logo settings error:", err);
@@ -896,7 +1230,7 @@ async function startServer() {
         text: "A-GIN",
         highlightText: "FASHION",
         slogan: "Exclusive Elegance",
-        logoUrl: ""
+        logoUrl: "/uploads/a_gin_logo_transparent_final.png"
       });
     }
   });
@@ -924,11 +1258,23 @@ async function startServer() {
   app.get("/api/settings/dtf", async (req, res) => {
     try {
       const dbData = await loadDatabase();
-      res.json(dbData.dtfSettings || {
+      const defaultDtf = {
         bannerImage: "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400",
         identityTitle: "A-GIN DTF & SABLON PREMIUM",
         identitySubtitle: "Hasil Cetak Detail Tinggi, Elastis, dan Tahan Cuci",
-        description: "Layanan sablon Digital Transfer Film (DTF) premium."
+        description: "Layanan sablon Digital Transfer Film (DTF) premium.",
+        surchargeLogo: 10000,
+        surchargeA5: 20000,
+        surchargeA4: 35000,
+        surchargeA3: 55000,
+        surchargeXXL: 10000,
+        surchargeXXXL: 15000,
+        whatsappNumber: "6281219154973",
+        mockupImage: ""
+      };
+      res.json({
+        ...defaultDtf,
+        ...(dbData.dtfSettings || {})
       });
     } catch (err: any) {
       console.error("Get DTF settings error:", err);
@@ -936,7 +1282,15 @@ async function startServer() {
         bannerImage: "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400",
         identityTitle: "A-GIN DTF & SABLON PREMIUM",
         identitySubtitle: "Hasil Cetak Detail Tinggi, Elastis, dan Tahan Cuci",
-        description: "Layanan sablon Digital Transfer Film (DTF) premium."
+        description: "Layanan sablon Digital Transfer Film (DTF) premium.",
+        surchargeLogo: 10000,
+        surchargeA5: 20000,
+        surchargeA4: 35000,
+        surchargeA3: 55000,
+        surchargeXXL: 10000,
+        surchargeXXXL: 15000,
+        whatsappNumber: "6281219154973",
+        mockupImage: ""
       });
     }
   });
@@ -944,13 +1298,34 @@ async function startServer() {
   // API - Settings - DTF - PUT
   app.put("/api/settings/dtf", async (req, res) => {
     try {
-      const { bannerImage, identityTitle, identitySubtitle, description } = req.body;
+      const { 
+        bannerImage, 
+        identityTitle, 
+        identitySubtitle, 
+        description,
+        surchargeLogo,
+        surchargeA5,
+        surchargeA4,
+        surchargeA3,
+        surchargeXXL,
+        surchargeXXXL,
+        whatsappNumber,
+        mockupImage
+      } = req.body;
       const dbData = await loadDatabase();
       dbData.dtfSettings = {
         bannerImage: bannerImage || "",
         identityTitle: identityTitle || "A-GIN DTF & SABLON PREMIUM",
         identitySubtitle: identitySubtitle || "",
-        description: description || ""
+        description: description || "",
+        surchargeLogo: surchargeLogo !== undefined ? Number(surchargeLogo) : 10000,
+        surchargeA5: surchargeA5 !== undefined ? Number(surchargeA5) : 20000,
+        surchargeA4: surchargeA4 !== undefined ? Number(surchargeA4) : 35000,
+        surchargeA3: surchargeA3 !== undefined ? Number(surchargeA3) : 55000,
+        surchargeXXL: surchargeXXL !== undefined ? Number(surchargeXXL) : 10000,
+        surchargeXXXL: surchargeXXXL !== undefined ? Number(surchargeXXXL) : 15000,
+        whatsappNumber: whatsappNumber || "6281219154973",
+        mockupImage: mockupImage || ""
       };
       await saveDatabase(dbData);
       res.json(dbData.dtfSettings);

@@ -40,14 +40,12 @@ export default function Sidebar({
         {logoSettings?.logoUrl ? (
           <div 
             className="h-16 w-auto flex items-center justify-start relative animate-none" 
-            style={{ mixBlendMode: 'multiply', filter: 'invert(1) contrast(1.2)' }}
           >
             <img 
               src={logoSettings.logoUrl} 
               alt="A-GIN" 
-              className={logoSettings.logoUrl.includes('a_gin_logo') ? "h-16 w-auto object-contain" : "h-28 w-auto object-cover object-top -mt-3"}
+              className="h-16 w-auto object-contain"
               referrerPolicy="no-referrer"
-              style={logoSettings.logoUrl.includes('a_gin_logo') ? {} : { clipPath: 'inset(10% 0 35% 0)' }}
             />
           </div>
         ) : (
