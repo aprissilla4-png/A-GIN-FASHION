@@ -1,0 +1,94 @@
+Line 1715 [1]: <div className="flex items-center justify-between">
+Line 1728 [0]: </div>
+Line 1731 [1]: <div className="space-y-1.5">
+Line 1735 [2]: <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-200">
+Line 1766 [1]: </div>
+Line 1767 [0]: </div>
+Line 1770 [1]: <div className="space-y-1.5">
+Line 1781 [0]: </div>
+Line 1784 [1]: <div className="space-y-1.5">
+Line 1795 [0]: </div>
+Line 1798 [1]: <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+Line 1799 [2]: <div className="space-y-1.5 col-span-2">
+Line 1810 [1]: </div>
+Line 1811 [2]: <div className="space-y-1.5">
+Line 1822 [1]: </div>
+Line 1823 [2]: <div className="space-y-1.5">
+Line 1834 [1]: </div>
+Line 1835 [2]: <div className="space-y-1.5 col-span-2">
+Line 1848 [1]: </div>
+Line 1849 [0]: </div>
+Line 1853 [1]: <div className="grid grid-cols-2 gap-3">
+Line 1854 [2]: <div className="space-y-1.5">
+Line 1858 [3]: <div className="relative">
+Line 1867 [2]: </div>
+Line 1868 [1]: </div>
+Line 1869 [2]: <div className="space-y-1.5">
+Line 1873 [3]: <div className="relative">
+Line 1882 [2]: </div>
+Line 1883 [1]: </div>
+Line 1884 [0]: </div>
+Line 1887 [1]: <div className="grid grid-cols-2 gap-3">
+Line 1888 [2]: <div className="space-y-1.5">
+Line 1913 [1]: </div>
+Line 1914 [2]: <div className="space-y-1.5">
+Line 1925 [1]: </div>
+Line 1926 [0]: </div>
+Line 1929 [1]: <div className="space-y-4">
+Line 1930 [2]: <div className="space-y-1.5">
+Line 1934 [3]: <div className="flex gap-2">
+Line 1948 [2]: </div>
+Line 1949 [1]: </div>
+Line 1951 [2]: <div className="space-y-1.5">
+Line 1955 [3]: <div className="grid grid-cols-2 gap-2">
+Line 1968 [2]: </div>
+Line 1971 [3]: <div className="grid grid-cols-3 gap-2 mt-2">
+Line 1973 [4]: <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
+Line 1981 [3]: </div>
+Line 1983 [2]: </div>
+Line 1988 [1]: </div>
+Line 1989 [0]: </div>
+Line 1992 [1]: <div className="space-y-1.5">
+Line 2004 [0]: </div>
+Line 2007 [1]: <div className="space-y-1.5">
+Line 2018 [0]: </div>
+Line 2021 [1]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2022 [2]: <div className="flex items-center gap-2">
+Line 2024 [3]: <div>
+Line 2027 [2]: </div>
+Line 2028 [1]: </div>
+Line 2035 [0]: </div>
+Line 2038 [1]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2039 [2]: <div className="flex items-center gap-2">
+Line 2041 [3]: <div>
+Line 2044 [2]: </div>
+Line 2045 [1]: </div>
+Line 2052 [0]: </div>
+Line 2055 [1]: <div className="flex flex-col gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2056 [2]: <div className="flex items-center justify-between">
+Line 2057 [3]: <div className="flex items-center gap-2">
+Line 2059 [4]: <div>
+Line 2062 [3]: </div>
+Line 2063 [2]: </div>
+Line 2071 [1]: </div>
+Line 2074 [2]: <div className="space-y-1.5 pt-2 border-t border-slate-200">
+Line 2094 [1]: </div>
+Line 2096 [0]: </div>
+Line 2099 [1]: <div className="space-y-4 pt-4 border-t border-slate-100">
+Line 2102 [2]: <div className="grid grid-cols-2 gap-3">
+Line 2103 [3]: <div className="space-y-1.5">
+Line 2115 [2]: </div>
+Line 2116 [3]: <div className="space-y-1.5">
+Line 2127 [2]: </div>
+Line 2128 [1]: </div>
+Line 2130 [2]: <div className="space-y-1.5">
+Line 2141 [1]: </div>
+Line 2143 [2]: <div className="space-y-1.5">
+Line 2154 [1]: </div>
+Line 2156 [2]: <div className="space-y-1.5">
+Line 2167 [1]: </div>
+Line 2169 [2]: <div className="space-y-1.5">
+Line 2180 [1]: </div>
+Line 2181 [0]: </div>
+Line 2196 [-1]: </div>
+Line 2197 [-2]: </div>

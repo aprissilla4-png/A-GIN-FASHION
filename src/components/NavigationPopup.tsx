@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { X, LogOut, User as UserIcon, Shield, Palette, Home, Film } from "lucide-react";
+import { X, LogOut, User as UserIcon, Shield, Palette, Home, Film, Truck } from "lucide-react";
 import { User } from "../types";
 
 interface NavigationPopupProps {
@@ -13,16 +13,18 @@ interface NavigationPopupProps {
   onOpenProfile: () => void;
   onOpenWorkspace: () => void;
   onOpenHome: () => void;
-  onOpenLookbook: () => void;
+  onOpenExplore: () => void;
+  onOpenSablonDtf: () => void;
+  onOpenBiteshipTesting: () => void;
   currentTheme: string;
   onThemeChange: (theme: string) => void;
 }
 
 const THEMES = [
-  { id: "default", name: "Default (Cream)", color: "bg-[#F5F2EB]" },
-  { id: "dark", name: "Modern Dark", color: "bg-slate-900" },
-  { id: "pastel", name: "Soft Pastel", color: "bg-rose-50" },
-  { id: "vibrant", name: "Vibrant Blue", color: "bg-blue-600" }
+  { id: "default", name: "Pink Mix Yellow Gradient", color: "bg-gradient-to-r from-[#D46A7A] via-[#E2A169] to-[#C09640]" },
+  { id: "dark", name: "Modern Dark", color: "bg-[#1E1113]" },
+  { id: "pastel", name: "Rose Blush (Soft)", color: "bg-[#FDF3F0]" },
+  { id: "vibrant", name: "Vibrant Pink", color: "bg-[#D46A7A]" }
 ];
 
 export default function NavigationPopup({
@@ -35,18 +37,20 @@ export default function NavigationPopup({
   onOpenProfile,
   onOpenWorkspace,
   onOpenHome,
-  onOpenLookbook,
+  onOpenExplore,
+  onOpenSablonDtf,
+  onOpenBiteshipTesting,
   currentTheme,
   onThemeChange
 }: NavigationPopupProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
+      <div
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
@@ -55,6 +59,7 @@ export default function NavigationPopup({
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
         className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl"
       >
         <div className="p-6 sm:p-8 space-y-8">
@@ -107,12 +112,30 @@ export default function NavigationPopup({
               </button>
 
               <button 
-                onClick={() => { onOpenLookbook(); onClose(); }}
-                className="flex flex-col items-center gap-2 p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group cursor-pointer"
+                onClick={() => { onOpenExplore(); onClose(); }}
+                className="flex flex-col items-center gap-2 p-4 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition-colors group cursor-pointer"
               >
-                <Film className="w-6 h-6 text-slate-400 group-hover:text-[#1B1B1B] transition-colors" />
-                <span className="text-xs font-bold text-slate-600">Lookbook</span>
+                <Film className="w-6 h-6 text-emerald-400 group-hover:text-emerald-700 transition-colors" />
+                <span className="text-xs font-bold text-emerald-700">Explore</span>
               </button>
+
+              <button 
+                onClick={() => { onOpenSablonDtf(); onClose(); }}
+                className="flex flex-col items-center gap-2 p-4 bg-orange-50 rounded-2xl hover:bg-orange-100 transition-colors group cursor-pointer"
+              >
+                <Palette className="w-6 h-6 text-orange-400 group-hover:text-orange-700 transition-colors" />
+                <span className="text-xs font-bold text-orange-700">Sablon DTF</span>
+              </button>
+
+              {user?.isAdmin && (
+                <button 
+                  onClick={() => { onOpenBiteshipTesting(); onClose(); }}
+                  className="flex flex-col items-center gap-2 p-4 bg-purple-50 rounded-2xl hover:bg-purple-100 transition-colors group cursor-pointer"
+                >
+                  <Truck className="w-6 h-6 text-purple-400 group-hover:text-purple-700 transition-colors" />
+                  <span className="text-xs font-bold text-purple-700">Biteship Testing</span>
+                </button>
+              )}
 
               {user && (
                 <>
@@ -175,6 +198,6 @@ export default function NavigationPopup({
           <p className="text-[10px] text-slate-400 font-mono">A-GIN FASHION VERSION 2.1.0</p>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

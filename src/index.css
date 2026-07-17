@@ -1,13 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
 /* Global root typography sizing - upscale all text proportionally */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 html {
   font-size: 17.5px; /* Increase base font size from standard 16px */
 }
@@ -38,5 +61,48 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* ModeConnect Custom Rose-Blush Map Style */
+.modeconnect-map-style .leaflet-tile-container img.leaflet-tile,
+.modeconnect-map-style .leaflet-tile {
+  /* Transform the colors of OpenStreetMap to ModeConnect Rose-Blush palette */
+  filter: sepia(0.55) hue-rotate(320deg) saturate(135%) brightness(102%) contrast(98%);
+  transition: filter 0.5s ease;
+}
+
+/* Custom styles for Leaflet zoom and attribution controls to blend in beautifully */
+.modeconnect-map-style .leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.12) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.modeconnect-map-style .leaflet-bar a {
+  background-color: #ffffff !important;
+  color: #e11d48 !important; /* Tailwind rose-600 */
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-weight: 800 !important;
+  transition: all 0.2s ease;
+}
+
+.modeconnect-map-style .leaflet-bar a:hover {
+  background-color: #fff1f2 !important; /* Tailwind rose-50 */
+  color: #be123c !important; /* Tailwind rose-700 */
+}
+
+.modeconnect-map-style .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(4px);
+  color: #94a3b8 !important;
+  font-size: 8px !important;
+  border-top-left-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+.modeconnect-map-style .leaflet-control-attribution a {
+  color: #e11d48 !important;
+  font-weight: 600;
 }
 

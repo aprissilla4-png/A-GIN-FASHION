@@ -9,6 +9,8 @@ interface ProductGridProps {
   onAddToCart: (product: Product) => void;
   onViewDetail: (product: Product) => void;
   onResetFilters?: () => void;
+  wishlist: Product[];
+  onToggleWishlist: (product: Product) => void;
 }
 
 export default function ProductGrid({
@@ -17,15 +19,11 @@ export default function ProductGrid({
   searchQuery,
   onAddToCart,
   onViewDetail,
-  onResetFilters
+  onResetFilters,
+  wishlist,
+  onToggleWishlist
 }: ProductGridProps) {
-  // Simple favorite states to keep track of hearted items
-  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-
-  const toggleFavorite = (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites(prev => ({ ...prev, [productId]: !prev[productId] }));
-  };
+  const [sortOption, setSortOption] = useState<'default' | 'price-asc' | 'price-desc' | 'newest'>('default');
 
   // Filter products based on category and search query
   const filteredProducts = products.filter((p) => {
@@ -39,8 +37,18 @@ export default function ProductGrid({
       p.category.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Feature: Simple Visibility
-    // Only show standard products (exclude flash sale if needed)
-    return matchesCategory && !p.isFlashSale; 
+    // Only show standard products (exclude flash sale, DTF, and banner collection products)
+    const isFashion = p.productType === "fashion" || !p.productType;
+    return matchesCategory && !p.isFlashSale && isFashion && !p.isBannerProduct; 
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortOption) {
+      case 'price-asc': return a.price - b.price;
+      case 'price-desc': return b.price - a.price;
+      case 'newest': return (b.createdAt || 0) - (a.createdAt || 0);
+      default: return 0;
+    }
   });
 
   const getCategoryTitle = () => {
@@ -82,9 +90,19 @@ export default function ProductGrid({
         >
           View All Products →
         </button>
+        <select 
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as any)}
+          className="font-mono text-[0.8rem] uppercase tracking-[0.15em] bg-transparent text-[#1B1B1B]/60 border border-[#1B1B1B]/10 rounded-full px-4 py-2 cursor-pointer focus:outline-none hover:text-[#A68966] hover:border-[#A68966] transition-colors"
+        >
+          <option value="default">Sort By</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="newest">Newest</option>
+        </select>
       </div>
       
-      {filteredProducts.length === 0 && (
+      {sortedProducts.length === 0 && (
         <div className="py-24 text-center font-mono text-[0.8rem] uppercase tracking-widest text-[#1B1B1B]/60">
           Archive Empty.
         </div>
@@ -92,19 +110,19 @@ export default function ProductGrid({
 
       {/* Grid structure matching the image perfectly */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-        {filteredProducts.map((p) => {
+        {sortedProducts.map((p) => {
           const rating = getRating(p.name);
-          const isFavorited = !!favorites[p.id];
+          const isWishlisted = !!wishlist.find(w => w.id === p.id);
           
           return (
             <div 
               key={p.id} 
-              className="group cursor-pointer flex flex-col justify-between" 
+              className="group cursor-pointer flex flex-col justify-between bg-transparent transition-all duration-300 hover:-translate-y-1" 
               onClick={() => onViewDetail(p)}
             >
               <div className="space-y-4">
                 {/* Image Wrapper */}
-                <div className="w-full aspect-[3/4] overflow-hidden bg-[#FAF7F2] rounded-3xl relative">
+                <div className="w-full aspect-[3/4] overflow-hidden bg-transparent relative">
                   <img 
                     src={p.image} 
                     alt={p.name}
@@ -113,12 +131,12 @@ export default function ProductGrid({
                   
                   {/* Floating Heart Button */}
                   <button 
-                    onClick={(e) => toggleFavorite(p.id, e)}
+                    onClick={(e) => { e.stopPropagation(); onToggleWishlist(p); }}
                     className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 flex items-center justify-center border border-black/5 hover:scale-110 active:scale-95 transition-all shadow-sm z-10 cursor-pointer"
                   >
                     <Heart 
                       className={`w-4.5 h-4.5 transition-colors ${
-                        isFavorited 
+                        isWishlisted 
                           ? "fill-red-500 text-red-500" 
                           : "text-[#111111]/70 hover:text-[#111111]"
                       }`} 
@@ -136,17 +154,17 @@ export default function ProductGrid({
 
                 {/* Details Block */}
                 <div className="space-y-1">
-                  <h4 className="font-sans text-[1.05rem] text-[#111111] font-normal leading-tight tracking-tight group-hover:text-[#A68966] transition-colors truncate">
+                  <h4 className="font-sans text-[1.05rem] text-[#2F2022] font-normal leading-tight tracking-tight group-hover:text-[#D46A7A] transition-colors truncate">
                     {p.name}
                   </h4>
                   
                   {/* Rating Section from image */}
                   <div className="flex items-center gap-1.5 py-0.5">
-                    <span className="text-[#C19A6B] text-[0.8rem] tracking-tight">{rating.starString}</span>
+                    <span className="text-[#D46A7A] text-[0.8rem] tracking-tight">{rating.starString}</span>
                     <span className="text-[#1B1B1B]/40 font-mono text-[0.75rem]">({rating.count})</span>
                   </div>
 
-                  <p className="font-mono text-[1rem] text-[#111111] font-semibold">
+                  <p className="font-mono text-[1rem] text-[#2F2022] font-semibold">
                     Rp {p.price.toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -156,7 +174,7 @@ export default function ProductGrid({
               <button 
                 disabled={p.stock === 0}
                 onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
-                className="mt-4 font-mono text-[0.8rem] uppercase tracking-[0.15em] bg-[#111111] text-white rounded-full py-3 hover:bg-[#111111]/80 transition-colors disabled:opacity-30 w-full cursor-pointer font-bold"
+                className="mt-4 font-sans text-[0.75rem] uppercase tracking-[0.18em] bg-[#D46A7A] hover:bg-[#C55263] text-white rounded-full py-3.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 w-full cursor-pointer font-bold shadow-md shadow-[#D46A7A]/10"
               >
                 Add to Bag
               </button>

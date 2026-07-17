@@ -1,6 +1,6 @@
 {
   "name": "Fashion E-Commerce",
   "description": "Platform e-commerce fashion modern dan elegan mirip Tokopedia dengan checkout WhatsApp.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,0 +1,143 @@
+Line 1687 [depth=1]: <div className="space-y-6">
+Line 1689 [depth=2]: <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-xl inline-flex mb-2">
+Line 1706 [depth=1]: </div>
+Line 1708 [depth=2]: <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+Line 1710 [depth=3]: <div className="lg:col-span-1 space-y-6">
+Line 1715 [depth=4]: <div className="flex items-center justify-between">
+Line 1728 [depth=3]: </div>
+Line 1731 [depth=4]: <div className="space-y-1.5">
+Line 1735 [depth=5]: <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-200">
+Line 1766 [depth=4]: </div>
+Line 1767 [depth=3]: </div>
+Line 1770 [depth=4]: <div className="space-y-1.5">
+Line 1781 [depth=3]: </div>
+Line 1784 [depth=4]: <div className="space-y-1.5">
+Line 1795 [depth=3]: </div>
+Line 1798 [depth=4]: <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+Line 1799 [depth=5]: <div className="space-y-1.5 col-span-2">
+Line 1810 [depth=4]: </div>
+Line 1811 [depth=5]: <div className="space-y-1.5">
+Line 1822 [depth=4]: </div>
+Line 1823 [depth=5]: <div className="space-y-1.5">
+Line 1834 [depth=4]: </div>
+Line 1835 [depth=5]: <div className="space-y-1.5 col-span-2">
+Line 1848 [depth=4]: </div>
+Line 1849 [depth=3]: </div>
+Line 1853 [depth=4]: <div className="grid grid-cols-2 gap-3">
+Line 1854 [depth=5]: <div className="space-y-1.5">
+Line 1858 [depth=6]: <div className="relative">
+Line 1867 [depth=5]: </div>
+Line 1868 [depth=4]: </div>
+Line 1869 [depth=5]: <div className="space-y-1.5">
+Line 1873 [depth=6]: <div className="relative">
+Line 1882 [depth=5]: </div>
+Line 1883 [depth=4]: </div>
+Line 1884 [depth=3]: </div>
+Line 1887 [depth=4]: <div className="grid grid-cols-2 gap-3">
+Line 1888 [depth=5]: <div className="space-y-1.5">
+Line 1913 [depth=4]: </div>
+Line 1914 [depth=5]: <div className="space-y-1.5">
+Line 1925 [depth=4]: </div>
+Line 1926 [depth=3]: </div>
+Line 1929 [depth=4]: <div className="space-y-4">
+Line 1930 [depth=5]: <div className="space-y-1.5">
+Line 1934 [depth=6]: <div className="flex gap-2">
+Line 1948 [depth=5]: </div>
+Line 1949 [depth=4]: </div>
+Line 1951 [depth=5]: <div className="space-y-1.5">
+Line 1955 [depth=6]: <div className="grid grid-cols-2 gap-2">
+Line 1968 [depth=5]: </div>
+Line 1971 [depth=6]: <div className="grid grid-cols-3 gap-2 mt-2">
+Line 1973 [depth=7]: <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
+Line 1981 [depth=6]: </div>
+Line 1983 [depth=5]: </div>
+Line 1988 [depth=4]: </div>
+Line 1989 [depth=3]: </div>
+Line 1992 [depth=4]: <div className="space-y-1.5">
+Line 2004 [depth=3]: </div>
+Line 2007 [depth=4]: <div className="space-y-1.5">
+Line 2018 [depth=3]: </div>
+Line 2021 [depth=4]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2022 [depth=5]: <div className="flex items-center gap-2">
+Line 2024 [depth=6]: <div>
+Line 2027 [depth=5]: </div>
+Line 2028 [depth=4]: </div>
+Line 2035 [depth=3]: </div>
+Line 2038 [depth=4]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2039 [depth=5]: <div className="flex items-center gap-2">
+Line 2041 [depth=6]: <div>
+Line 2044 [depth=5]: </div>
+Line 2045 [depth=4]: </div>
+Line 2052 [depth=3]: </div>
+Line 2055 [depth=4]: <div className="flex flex-col gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2056 [depth=5]: <div className="flex items-center justify-between">
+Line 2057 [depth=6]: <div className="flex items-center gap-2">
+Line 2059 [depth=7]: <div>
+Line 2062 [depth=6]: </div>
+Line 2063 [depth=5]: </div>
+Line 2071 [depth=4]: </div>
+Line 2074 [depth=5]: <div className="space-y-1.5 pt-2 border-t border-slate-200">
+Line 2094 [depth=4]: </div>
+Line 2096 [depth=3]: </div>
+Line 2099 [depth=4]: <div className="space-y-4 pt-4 border-t border-slate-100">
+Line 2102 [depth=5]: <div className="grid grid-cols-2 gap-3">
+Line 2103 [depth=6]: <div className="space-y-1.5">
+Line 2115 [depth=5]: </div>
+Line 2116 [depth=6]: <div className="space-y-1.5">
+Line 2127 [depth=5]: </div>
+Line 2128 [depth=4]: </div>
+Line 2130 [depth=5]: <div className="space-y-1.5">
+Line 2141 [depth=4]: </div>
+Line 2143 [depth=5]: <div className="space-y-1.5">
+Line 2154 [depth=4]: </div>
+Line 2156 [depth=5]: <div className="space-y-1.5">
+Line 2167 [depth=4]: </div>
+Line 2169 [depth=5]: <div className="space-y-1.5">
+Line 2180 [depth=4]: </div>
+Line 2181 [depth=3]: </div>
+Line 2196 [depth=2]: </div>
+Line 2197 [depth=1]: </div>
+Line 2200 [depth=2]: <div className="lg:col-span-2">
+Line 2201 [depth=3]: <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+Line 2202 [depth=4]: <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+Line 2207 [depth=5]: <div className="flex items-center gap-4">
+Line 2223 [depth=6]: <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+Line 2242 [depth=5]: </div>
+Line 2250 [depth=4]: </div>
+Line 2251 [depth=3]: </div>
+Line 2253 [depth=4]: <div className="space-y-6">
+Line 2255 [depth=5]: <div key={chunkIdx} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+Line 2256 [depth=6]: <div className="bg-slate-50 px-6 py-4 flex items-center justify-between border-b border-slate-200">
+Line 2257 [depth=7]: <div className="flex items-center gap-3">
+Line 2258 [depth=8]: <div className="w-8 h-8 bg-red-600 rounded-xl flex items-center justify-center text-white text-[10px] font-black">
+Line 2260 [depth=7]: </div>
+Line 2261 [depth=8]: <div>
+Line 2264 [depth=7]: </div>
+Line 2265 [depth=6]: </div>
+Line 2266 [depth=5]: </div>
+Line 2268 [depth=6]: <div className="p-4 md:p-6">
+Line 2269 [depth=7]: <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+Line 2271 [depth=8]: <div
+Line 2276 [depth=9]: <div className="aspect-[3/4] rounded-xl overflow-hidden mb-2.5 border border-slate-100 bg-slate-50">
+Line 2283 [depth=10]: <div className="absolute top-2 left-2 flex flex-col gap-1">
+Line 2289 [depth=9]: </div>
+Line 2290 [depth=8]: </div>
+Line 2292 [depth=9]: <div className="space-y-1.5 mb-2">
+Line 2294 [depth=10]: <div className="flex items-center justify-between">
+Line 2297 [depth=9]: </div>
+Line 2298 [depth=8]: </div>
+Line 2300 [depth=9]: <div className="flex gap-1.5 pt-2 border-t border-slate-100">
+Line 2323 [depth=8]: </div>
+Line 2324 [depth=7]: </div>
+Line 2326 [depth=6]: </div>
+Line 2327 [depth=5]: </div>
+Line 2328 [depth=4]: </div>
+Line 2332 [depth=5]: <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-16 text-center">
+Line 2333 [depth=6]: <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+Line 2335 [depth=5]: </div>
+Line 2338 [depth=4]: </div>
+Line 2340 [depth=3]: </div>
+Line 2341 [depth=2]: </div>
+Line 2342 [depth=1]: </div>
+Line 2343 [depth=0]: </div>
+Line 2344 [depth=-1]: </div>

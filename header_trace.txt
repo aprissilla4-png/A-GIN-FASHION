@@ -1,0 +1,152 @@
+Line 1490 [1]: <div id="admin-panel-container" className="space-y-8 animate-fade-in pb-16">
+Line 1491 [1]: {/* Header Panel */}
+Line 1492 [2]: <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-150 pb-5 gap-4">
+Line 1493 [3]: <div>
+Line 1494 [3]: <h2 className="text-2xl font-extrabold text-emerald-950 tracking-tight flex items-center gap-2.5">
+Line 1495 [3]: <Sliders className="w-6 h-6 text-red-600" />
+Line 1496 [3]: <span>A-GIN FASHION Admin Console</span>
+Line 1497 [3]: </h2>
+Line 1498 [3]: <p className="text-xs text-slate-500 font-semibold mt-1">
+Line 1499 [3]: Dashboard kelola (CRUD) katalog busana fashion dan banner promo dinamis
+Line 1500 [3]: </p>
+Line 1501 [2]: </div>
+Line 1502 [2]: 
+Line 1503 [2]: {/* Tab Toggle Controls */}
+Line 1504 [3]: <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+Line 1505 [3]: <button
+Line 1506 [3]: onClick={() => setAdminTab("dashboard")}
+Line 1507 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1508 [3]: adminTab === "dashboard"
+Line 1509 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1510 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1511 [3]: }`}
+Line 1512 [3]: >
+Line 1513 [3]: <Package className="w-3.5 h-3.5" />
+Line 1514 [3]: <span>Dashboard</span>
+Line 1515 [3]: </button>
+Line 1516 [3]: <button
+Line 1517 [3]: onClick={() => setAdminTab("marketing")}
+Line 1518 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1519 [3]: adminTab === "marketing"
+Line 1520 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1521 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1522 [3]: }`}
+Line 1523 [3]: >
+Line 1524 [3]: <Megaphone className="w-3.5 h-3.5 text-yellow-500" />
+Line 1525 [3]: <span>Marketing</span>
+Line 1526 [3]: </button>
+Line 1527 [3]: <button
+Line 1528 [3]: onClick={() => setAdminTab("products")}
+Line 1529 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1530 [3]: adminTab === "products"
+Line 1531 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1532 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1533 [3]: }`}
+Line 1534 [3]: >
+Line 1535 [3]: <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
+Line 1536 [3]: <span>Produk Print DTF</span>
+Line 1537 [3]: </button>
+Line 1538 [3]: <button
+Line 1539 [3]: onClick={() => setAdminTab("categories")}
+Line 1540 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1541 [3]: adminTab === "categories"
+Line 1542 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1543 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1544 [3]: }`}
+Line 1545 [3]: >
+Line 1546 [3]: <Folder className="w-3.5 h-3.5" />
+Line 1547 [3]: <span>Kategori</span>
+Line 1548 [3]: </button>
+Line 1549 [3]: <button
+Line 1550 [3]: onClick={() => setAdminTab("gallery")}
+Line 1551 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1552 [3]: adminTab === "gallery"
+Line 1553 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1554 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1555 [3]: }`}
+Line 1556 [3]: >
+Line 1557 [3]: <Image className="w-3.5 h-3.5" />
+Line 1558 [3]: <span>Galeri</span>
+Line 1559 [3]: </button>
+Line 1560 [3]: <button
+Line 1561 [3]: onClick={() => setAdminTab("banners")}
+Line 1562 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1563 [3]: adminTab === "banners" || adminTab === "small-banners" || adminTab === "info-banners" || adminTab === "video-banners" || adminTab === "explore"
+Line 1564 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1565 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1566 [3]: }`}
+Line 1567 [3]: >
+Line 1568 [3]: <Layout className="w-3.5 h-3.5 text-pink-500" />
+Line 1569 [3]: <span>Banner</span>
+Line 1570 [3]: </button>
+Line 1571 [3]: <button
+Line 1572 [3]: onClick={() => setAdminTab("whatsapp")}
+Line 1573 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1574 [3]: adminTab === "whatsapp"
+Line 1575 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1576 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1577 [3]: }`}
+Line 1578 [3]: >
+Line 1579 [3]: <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
+Line 1580 [3]: <span>WhatsApp</span>
+Line 1581 [3]: </button>
+Line 1582 [3]: <button
+Line 1583 [3]: onClick={() => setAdminTab("orders")}
+Line 1584 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1585 [3]: adminTab === "orders" || adminTab === "saved-designs" || adminTab === "customer-uploads"
+Line 1586 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1587 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1588 [3]: }`}
+Line 1589 [3]: >
+Line 1590 [3]: <FileText className="w-3.5 h-3.5" />
+Line 1591 [3]: <span>Pesanan</span>
+Line 1592 [3]: </button>
+Line 1593 [3]: <button
+Line 1594 [3]: onClick={() => setAdminTab("settings")}
+Line 1595 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1596 [3]: adminTab === "settings"
+Line 1597 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1598 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1599 [3]: }`}
+Line 1600 [3]: >
+Line 1601 [3]: <Palette className="w-3.5 h-3.5 text-red-500" />
+Line 1602 [3]: <span>Pengaturan</span>
+Line 1603 [3]: </button>
+Line 1604 [3]: <button
+Line 1605 [3]: onClick={() => setAdminTab("users")}
+Line 1606 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1607 [3]: adminTab === "users"
+Line 1608 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1609 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1610 [3]: }`}
+Line 1611 [3]: >
+Line 1612 [3]: <UserIcon className="w-3.5 h-3.5" />
+Line 1613 [3]: <span>User</span>
+Line 1614 [3]: </button>
+Line 1615 [3]: <button
+Line 1616 [3]: onClick={() => setAdminTab("backup")}
+Line 1617 [3]: className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+Line 1618 [3]: adminTab === "backup"
+Line 1619 [3]: ? "bg-purple-900 text-white shadow-sm"
+Line 1620 [3]: : "text-slate-600 hover:text-slate-900"
+Line 1621 [3]: }`}
+Line 1622 [3]: >
+Line 1623 [3]: <FileJson className="w-3.5 h-3.5 text-blue-500" />
+Line 1624 [3]: <span>Backup Database</span>
+Line 1625 [3]: </button>
+Line 1626 [2]: </div>
+Line 1627 [1]: </div>
+Line 1628 [1]: 
+Line 1629 [1]: {/* Message feedback */}
+Line 1630 [1]: {msg.text && (
+Line 1631 [1]: <div
+Line 1632 [1]: className={`p-4 rounded-xl text-xs font-bold border flex items-center gap-2.5 ${
+Line 1633 [1]: msg.type === "error"
+Line 1634 [1]: ? "bg-red-50 text-red-700 border-red-100"
+Line 1635 [1]: : "bg-emerald-50 text-emerald-900 border-emerald-150"
+Line 1636 [1]: }`}
+Line 1637 [1]: >
+Line 1638 [1]: <AlertCircle className="w-4 h-4 text-red-600" />
+Line 1639 [1]: <span>{msg.text}</span>
+Line 1640 [0]: </div>
+Line 1641 [0]: )}

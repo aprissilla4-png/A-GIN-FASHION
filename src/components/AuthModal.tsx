@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import { X, Mail, Lock, User as UserIcon, AlertCircle } from "lucide-react";
 import { User } from "../types";
 
@@ -45,14 +46,53 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
   };
 
   const handleGoogleLogin = async () => {
-    setErrorMsg("Login dengan Google saat ini tidak tersedia.");
+    setErrorMsg("");
+    setLoading(true);
+    try {
+      // In this app, we use googleSignIn from workspace lib
+      const { googleSignIn } = await import("../lib/workspace");
+      const result = await googleSignIn();
+      if (result) {
+        onLoginSuccess({
+          id: result.user.uid,
+          name: result.user.displayName || "User",
+          email: result.user.email || "",
+          isAdmin: result.user.email === 'aprhyzsilla1@gmail.com',
+          avatarUrl: result.user.photoURL || ""
+        });
+        onClose();
+      }
+    } catch (err: any) {
+      console.error("Google Login Error:", err);
+      if (err.code === "auth/popup-closed-by-user") {
+        setErrorMsg("Login dibatalkan atau jendela ditutup. Silakan coba lagi.");
+      } else if (err.code === "auth/popup-blocked") {
+        setErrorMsg("Popup diblokir browser. Izinkan popup untuk melanjutkan.");
+      } else {
+        setErrorMsg("Gagal login dengan Google. Silakan coba lagi atau gunakan email.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div id="auth-modal-overlay" className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      id="auth-modal-overlay" 
+      className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
+    >
       <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
 
-      <div id="auth-modal-card" className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden z-10 animate-scale-up">
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        id="auth-modal-card" 
+        className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden z-10"
+      >
         <div className="bg-gradient-to-r from-red-600 to-emerald-950 px-6 py-8 text-white relative">
           <button
             id="close-auth-btn"
@@ -140,7 +180,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
             A-GIN Fashion Security Handshake
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

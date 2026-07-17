@@ -8,11 +8,25 @@ const pool = new Pool({
   user: process.env.SQL_USER,
   password: process.env.SQL_PASSWORD,
   database: process.env.SQL_DB_NAME,
-  connectionTimeoutMillis: 15000,
+  connectionTimeoutMillis: 20000,
+  idleTimeoutMillis: 30000,
+  max: 10,
 });
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle SQL pool client:', err);
 });
+
+// Helper to check connection
+export const checkDbConnection = async () => {
+  try {
+    const client = await pool.connect();
+    client.release();
+    return true;
+  } catch (err) {
+    console.error('Database connection check failed:', err);
+    return false;
+  }
+};
 
 export const db = drizzle(pool, { schema });

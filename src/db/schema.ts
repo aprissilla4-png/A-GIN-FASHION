@@ -29,6 +29,9 @@ export const products = pgTable('products', {
   sizes: text('sizes'), // JSON string of sizes
   groupId: text('group_id'),
   isMainProduct: boolean('is_main_product').default(false),
+  collectionId: text('collection_id'),
+  isBannerProduct: boolean('is_banner_product').default(false),
+  bannerId: text('banner_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 

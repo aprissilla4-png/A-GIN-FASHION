@@ -1,14 +1,22 @@
-import { db } from "./src/db/index.ts";
-import { products } from "./src/db/schema.ts";
+import { db } from './src/db';
+import { banners } from './src/db/schema';
 
-async function testDb() {
+async function test() {
+  const bannerData = {
+    id: "slide-test",
+    image: "image",
+    title: "title",
+    subtitle: "",
+    description: null,
+    url: null,
+    badge: "badge",
+    bgColor: "bg"
+  };
   try {
-    console.log("Attempting to fetch products...");
-    const allProducts = await db.select().from(products);
-    console.log("Success! Products count:", allProducts.length);
+    await db.insert(banners).values(bannerData);
+    console.log("Success");
   } catch (err) {
-    console.error("Database error:", err);
+    console.error("Error:", err);
   }
 }
-
-testDb();
+test();

@@ -82,9 +82,18 @@ export default function Sidebar({
           {categories.map((cat) => (
             <button
               key={cat.value}
-              onClick={() => { setActiveTab("home"); setCategory(cat.value); }}
+              onClick={() => { 
+                if (cat.value === "Sablon DTF") {
+                  setActiveTab("sablon-dtf");
+                } else {
+                  setActiveTab("home"); 
+                  setCategory(cat.value);
+                }
+              }}
               className={`text-[0.65rem] uppercase tracking-[0.15em] text-left transition-opacity ${
-                activeTab === "home" && currentCategory === cat.value ? "opacity-100 text-[#1B1B1B] font-bold" : "opacity-60 text-[#1B1B1B] hover:opacity-100"
+                (activeTab === "home" && currentCategory === cat.value) || (activeTab === "sablon-dtf" && cat.value === "Sablon DTF") 
+                  ? "opacity-100 text-[#1B1B1B] font-bold" 
+                  : "opacity-60 text-[#1B1B1B] hover:opacity-100"
               }`}
             >
               {cat.name}
@@ -93,14 +102,24 @@ export default function Sidebar({
         </div>
 
         {user?.isAdmin && (
-          <button
-            onClick={() => setActiveTab("admin")}
-            className={`text-[0.65rem] uppercase tracking-[0.15em] text-left transition-opacity mt-4 ${
-              activeTab === "admin" ? "opacity-100 text-[#1B1B1B] font-bold" : "opacity-60 text-[#1B1B1B] hover:opacity-100"
-            }`}
-          >
-            Panel Admin
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab("admin")}
+              className={`text-[0.65rem] uppercase tracking-[0.15em] text-left transition-opacity mt-4 ${
+                activeTab === "admin" ? "opacity-100 text-[#1B1B1B] font-bold" : "opacity-60 text-[#1B1B1B] hover:opacity-100"
+              }`}
+            >
+              Panel Admin
+            </button>
+            <button
+              onClick={() => setActiveTab("biteship-testing")}
+              className={`text-[0.65rem] uppercase tracking-[0.15em] text-left transition-opacity mt-2 ${
+                activeTab === "biteship-testing" ? "opacity-100 text-[#1B1B1B] font-bold" : "opacity-60 text-[#1B1B1B] hover:opacity-100"
+              }`}
+            >
+              Aktivasi Biteship API
+            </button>
+          </>
         )}
       </nav>
 

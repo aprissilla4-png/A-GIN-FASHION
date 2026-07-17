@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { User, Product, CartItem, LogoSettings, HomeMedia, DtfSettings, Banner, SmallBanner, InfoBanner } from "./types";
+import { User, Product, CartItem, LogoSettings, HomeMedia, DtfSettings, Banner, SmallBanner, InfoBanner, VideoBanner, ExploreVideo, MarketingText } from "./types";
 import { Tab } from "./types";
+import { motion, AnimatePresence } from "motion/react";
 import Topbar from "./components/Topbar";
 import HeroSlider from "./components/HeroSlider";
 import SmallBannerSection from "./components/SmallBannerSection";
@@ -13,23 +14,31 @@ import AuthModal from "./components/AuthModal";
 import MandatoryLogin from "./components/MandatoryLogin";
 import ProductDetailModal from "./components/ProductDetailModal";
 import ProfileModal from "./components/ProfileModal";
-import SablonDtfView from "./components/SablonDtfView";
-import HomeMediaShowcase from "./components/HomeMediaShowcase";
+import { BrandLogo } from "./components/BrandLogo";
+import DtfCatalogPage from "./components/DtfCatalogPage";
+import ExploreView from "./components/ExploreView";
+import BiteshipTestingView from "./components/BiteshipTestingView";
+import ScrollVideoBanner from "./components/ScrollVideoBanner";
 import CategoryThumbnails from "./components/CategoryThumbnails";
 import Newsletter from "./components/Newsletter";
+import DtfShowcase from "./components/DtfShowcase";
 import Sidebar from "./components/Sidebar";
-import LookbookView from "./components/LookbookView";
 import InfoModal from "./components/InfoModal";
 import NavigationPopup from "./components/NavigationPopup";
+import OrderTrackingModal from "./components/OrderTrackingModal";
 import WorkspaceView from "./components/WorkspaceView";
+import PostProductView from "./components/PostProductView";
+import InfoBannerCollectionView from "./components/InfoBannerCollectionView";
 import { auth, googleSignIn, getWorkspaceToken } from "./lib/workspace";
 import { onAuthStateChanged } from "firebase/auth";
+import { Megaphone } from "lucide-react";
 
 export default function App() {
   const mainScrollRef = useRef<HTMLDivElement>(null);
   // Session & UI states
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [marketingTexts, setMarketingTexts] = useState<MarketingText[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,8 +48,10 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedDetailProduct, setSelectedDetailProduct] = useState<Product | null>(null);
+  const [selectedInfoBanner, setSelectedInfoBanner] = useState<InfoBanner | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [infoTab, setInfoTab] = useState<"contact" | "shipping" | "returns" | "size-guide" | "lookbook">("contact");
+  const [infoTab, setInfoTab] = useState<"contact" | "shipping" | "returns" | "size-guide">("contact");
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
   const [footerEmail, setFooterEmail] = useState("");
   const [footerSubscribed, setFooterSubscribed] = useState(false);
 
@@ -49,7 +60,10 @@ export default function App() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [smallBanners, setSmallBanners] = useState<SmallBanner[]>([]);
   const [infoBanners, setInfoBanners] = useState<InfoBanner[]>([]);
+  const [videoBanners, setVideoBanners] = useState<VideoBanner[]>([]);
+  const [exploreVideos, setExploreVideos] = useState<ExploreVideo[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState("default");
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -116,18 +130,32 @@ export default function App() {
     fetchSettings();
   }, [idToken]);
 
+  const fetchMarketingTexts = async () => {
+    try {
+      const response = await fetch("/api/marketing-texts");
+      if (response.ok) {
+        const data = await response.json();
+        setMarketingTexts(data);
+      }
+    } catch (err) {
+      console.error("Error fetching marketing texts:", err);
+    }
+  };
+
   const fetchSettings = async () => {
     try {
       const headers: any = {};
       if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
 
-      const [logoRes, dtfRes, mediaRes, bannersRes, smallBannersRes, infoBannersRes] = await Promise.all([
+      const [logoRes, dtfRes, mediaRes, bannersRes, smallBannersRes, infoBannersRes, videoBannersRes, exploreRes] = await Promise.all([
         fetch("/api/settings/logo", { headers }),
         fetch("/api/settings/dtf", { headers }),
         fetch("/api/settings/homemedia", { headers }),
         fetch("/api/banners", { headers }),
         fetch("/api/small-banners", { headers }),
-        fetch("/api/info-banners", { headers })
+        fetch("/api/info-banners", { headers }),
+        fetch("/api/video-banners", { headers }),
+        fetch("/api/explore-videos", { headers })
       ]);
       if (logoRes.ok) setLogoSettings(await logoRes.json());
       if (dtfRes.ok) setDtfSettings(await dtfRes.json());
@@ -135,6 +163,9 @@ export default function App() {
       if (bannersRes.ok) setBanners(await bannersRes.json());
       if (smallBannersRes.ok) setSmallBanners(await smallBannersRes.json());
       if (infoBannersRes.ok) setInfoBanners(await infoBannersRes.json());
+      if (videoBannersRes.ok) setVideoBanners(await videoBannersRes.json());
+      if (exploreRes.ok) setExploreVideos(await exploreRes.json());
+      fetchMarketingTexts();
     } catch (err) {
       console.error("Error fetching settings:", err);
     }
@@ -222,10 +253,10 @@ export default function App() {
 
   const getThemeClasses = () => {
     switch (theme) {
-      case "dark": return "bg-slate-950 text-slate-100 min-h-screen transition-colors duration-500";
-      case "pastel": return "bg-rose-50 text-slate-800 min-h-screen transition-colors duration-500";
-      case "vibrant": return "bg-blue-600 text-white min-h-screen transition-colors duration-500";
-      default: return "bg-[#F5F2EB] text-[#1B1B1B] min-h-screen transition-colors duration-500";
+      case "dark": return "bg-[#1E1113] text-[#FAF1EE] min-h-screen transition-colors duration-500";
+      case "pastel": return "bg-[#FDF3F0] text-[#2F2022] min-h-screen transition-colors duration-500";
+      case "vibrant": return "bg-[#D46A7A] text-white min-h-screen transition-colors duration-500";
+      default: return "bg-white text-[#2F2022] min-h-screen transition-all duration-500";
     }
   };
 
@@ -271,6 +302,14 @@ export default function App() {
 
     // Automatically slide out cart drawer for premium UX feedback
     setIsCartOpen(true);
+  };
+
+  const toggleWishlist = (product: Product) => {
+    setWishlist(prev => 
+      prev.find(p => p.id === product.id)
+        ? prev.filter(p => p.id !== product.id)
+        : [...prev, product]
+    );
   };
 
   const handleUpdateCartQuantity = (productId: string, quantity: number, size: string) => {
@@ -343,9 +382,6 @@ export default function App() {
     scrollToCatalog();
   };
 
-  const handleWatchLookbook = () => {
-    setActiveTab("lookbook");
-  };
 
   const handleViewBadge = (tab: "shipping" | "returns" | "contact") => {
     setInfoTab(tab);
@@ -385,7 +421,10 @@ export default function App() {
     try {
       const res = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Email": user?.email || ""
+        },
         body: JSON.stringify(productData)
       });
       if (res.ok) {
@@ -403,7 +442,10 @@ export default function App() {
     try {
       const res = await fetch(`/api/products/${productId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Email": user?.email || ""
+        },
         body: JSON.stringify(productData)
       });
       if (res.ok) {
@@ -417,10 +459,32 @@ export default function App() {
     }
   };
 
+  const handleDeleteAllProductsAPI = async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/products", { 
+        method: "DELETE",
+        headers: {
+          "X-Admin-Email": user?.email || ""
+        }
+      });
+      if (res.ok) {
+        await fetchProducts();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Error deleting all products:", err);
+      return false;
+    }
+  };
+
   const handleDeleteProductAPI = async (productId: string): Promise<boolean> => {
     try {
       const res = await fetch(`/api/products/${productId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "X-Admin-Email": user?.email || ""
+        }
       });
       if (res.ok) {
         await fetchProducts(); // refresh list
@@ -435,23 +499,6 @@ export default function App() {
     }
   };
 
-  const handleDeleteAllProductsAPI = async (): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/products", {
-        method: "DELETE"
-      });
-      if (res.ok) {
-        await fetchProducts(); // refresh list
-        setCart([]); // clear cart
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error("Error deleting all products:", err);
-      return false;
-    }
-  };
-
   if (!user) {
     return <MandatoryLogin onLoginSuccess={handleLoginSuccess} />;
   }
@@ -460,57 +507,126 @@ export default function App() {
     <div id="app-root-layout" className={`flex flex-col font-sans antialiased overflow-hidden ${getThemeClasses()}`}>
       
       {/* Sticky Header Topbar */}
-      {activeTab !== "lookbook" && (
-        <Topbar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          cart={cart}
-          onOpenCart={() => setIsCartOpen(true)}
-          user={user}
-          onOpenAuth={() => setIsAuthOpen(true)}
-          onOpenProfile={() => setIsProfileOpen(true)}
-          onOpenNav={() => setIsNavOpen(true)}
-          activeTab={activeTab === "lookbook" ? "home" : activeTab}
-          setActiveTab={(tab) => setActiveTab(tab as any)}
-          currentCategory={categoryFilter}
-          setCategory={setCategoryFilter}
-          logoSettings={logoSettings}
-        />
-      )}
-
-      <NavigationPopup
-        isOpen={isNavOpen}
-        onClose={() => setIsNavOpen(false)}
+      <Topbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        cart={cart}
+        onOpenCart={() => setIsCartOpen(true)}
         user={user}
-        onGoogleLogin={handleGoogleLogin}
-        onLogout={handleLogout}
-        onOpenAdmin={() => setActiveTab("admin")}
+        onOpenAuth={() => setIsAuthOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenWorkspace={() => setActiveTab("workspace")}
-        onOpenHome={() => { setActiveTab("home"); setCategoryFilter("all"); }}
-        onOpenLookbook={() => setActiveTab("lookbook")}
-        currentTheme={theme}
-        onThemeChange={handleThemeChange}
+        onOpenNav={() => setIsNavOpen(true)}
+        activeTab={activeTab}
+        setActiveTab={(tab) => setActiveTab(tab as any)}
+        currentCategory={categoryFilter}
+        setCategory={setCategoryFilter}
+        logoSettings={logoSettings}
       />
 
+      <AnimatePresence>
+        {isNavOpen && (
+          <motion.div key="navigation-popup">
+            <NavigationPopup
+              isOpen={isNavOpen}
+              onClose={() => setIsNavOpen(false)}
+              user={user}
+              onGoogleLogin={handleGoogleLogin}
+              onLogout={handleLogout}
+              onOpenAdmin={() => setActiveTab("admin")}
+              onOpenProfile={() => setIsProfileOpen(true)}
+              onOpenWorkspace={() => setActiveTab("workspace")}
+              onOpenHome={() => { setActiveTab("home"); setCategoryFilter("all"); }}
+              onOpenExplore={() => setActiveTab("explore")}
+              onOpenSablonDtf={() => setActiveTab("sablon-dtf")}
+              onOpenBiteshipTesting={() => setActiveTab("biteship-testing")}
+              currentTheme={theme}
+              onThemeChange={handleThemeChange}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Wrapper */}
-      <main ref={mainScrollRef} className="flex-1 overflow-y-auto relative pb-10 no-scrollbar">
+      <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden relative pb-10 no-scrollbar">
           
-        {loading ? (
-          <div className="h-[400px] flex flex-col items-center justify-center space-y-3">
-            <div className="w-10 h-10 border-4 border-[#1B1B1B] border-t-transparent rounded-full animate-spin" />
-            <p className="font-mono text-xs uppercase tracking-widest text-[#1B1B1B]/60">Memuat katalog...</p>
-          </div>
-        ) : activeTab === "workspace" ? (
-          <WorkspaceView 
-            idToken={idToken || ""} 
-            workspaceToken={workspaceToken || ""} 
-          />
-        ) : activeTab === "lookbook" ? (
-          <LookbookView onBack={() => setActiveTab("home")} />
-        ) : activeTab === "admin" ? (
-          // ADMIN BACKEND CRUD VIEW WITH ORIGINAL SIDEBAR LAYOUT RESTORED
-          <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] w-full overflow-hidden bg-[#F5F2EB]">
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-[400px] flex flex-col items-center justify-center space-y-3"
+            >
+              <div className="w-10 h-10 border-4 border-[#1B1B1B] border-t-transparent rounded-full animate-spin" />
+              <p className="font-mono text-xs uppercase tracking-widest text-[#1B1B1B]/60">Memuat katalog...</p>
+            </motion.div>
+          ) : activeTab === "workspace" ? (
+            <motion.div
+              key="workspace"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <WorkspaceView 
+                idToken={idToken || ""} 
+                workspaceToken={workspaceToken || ""} 
+              />
+            </motion.div>
+          ) : activeTab === "explore" ? (
+            <motion.div
+              key="explore"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ExploreView videos={exploreVideos} />
+            </motion.div>
+          ) : (user?.isAdmin && activeTab === "biteship-testing") ? (
+            <motion.div
+              key="biteship-testing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <BiteshipTestingView />
+            </motion.div>
+          ) : activeTab === "post-product" ? (
+            <motion.div
+              key="post-product"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <PostProductView 
+                onBackToHome={() => setActiveTab("home")}
+                onProductAdded={fetchProducts}
+                user={user}
+              />
+            </motion.div>
+          ) : activeTab === "sablon-dtf" ? (
+            <motion.div
+              key="sablon-dtf"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <DtfCatalogPage 
+                dtfSettings={dtfSettings}
+                products={products}
+                onAddToCart={handleAddToCart}
+                onBack={() => setActiveTab("home")}
+              />
+            </motion.div>
+          ) : activeTab === "admin" ? (
+            // ADMIN BACKEND CRUD VIEW WITH ORIGINAL SIDEBAR LAYOUT RESTORED
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] w-full overflow-hidden bg-white"
+            >
             {/* Left Sidebar on Desktop in Admin Mode */}
             <div className="hidden lg:block w-[240px] flex-shrink-0 border-r border-[#1B1B1B]/10 h-full">
               <Sidebar
@@ -536,33 +652,83 @@ export default function App() {
                 onAddProduct={handleAddProductAPI}
                 onUpdateProduct={handleUpdateProductAPI}
                 onDeleteProduct={handleDeleteProductAPI}
-                onDeleteAllProducts={handleDeleteAllProductsAPI}
+                onDeleteProducts={handleDeleteAllProductsAPI}
                 onReloadProducts={fetchProducts}
                 onReloadSettings={fetchSettings}
+                onViewDetail={setSelectedDetailProduct}
+                user={user}
               />
             </div>
-          </div>
+          </motion.div>
         ) : (
-          // FRONTEND E-COMMERCE VIEW
-          <div className="w-full">
-            {/* Slider Hero Banner (Full Width) */}
-            {categoryFilter === "all" && searchQuery === "" && (
-              <HeroSlider 
-                banners={banners}
-                onShopNow={handleShopNow}
-                onWatchLookbook={handleWatchLookbook}
-                onViewBadge={handleViewBadge}
-              />
-            )}
+          <>
+            {/* 1. IMMERSIVE BRAND HERO - FULL SCREEN */}
+        {/* FRONTEND E-COMMERCE VIEW */}
+        <motion.div
+          key="home"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="w-full"
+        >
+          {/* Top Video Banners */}
+          {categoryFilter === "all" && searchQuery === "" && videoBanners.filter(b => b.position === "top" && b.isActive).map(banner => (
+            <ScrollVideoBanner 
+              key={banner.id} 
+              containerRef={mainScrollRef} 
+              banner={banner} 
+              onNavigate={setActiveTab} 
+              products={products}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
 
-            {/* Small Banner + MADE TO MOVE Slogan Section */}
-            {categoryFilter === "all" && searchQuery === "" && (
-              <SmallBannerSection smallBanners={smallBanners} />
-            )}
+          {/* Slider Hero Banner (Full Width) */}
+          {categoryFilter === "all" && searchQuery === "" && (
+            <HeroSlider 
+              banners={banners}
+              onShopNow={handleShopNow}
+              onViewBadge={handleViewBadge}
+            />
+          )}
+
+          {/* Small Banner + MADE TO MOVE Slogan Section */}
+          {categoryFilter === "all" && searchQuery === "" && (
+            <SmallBannerSection smallBanners={smallBanners} />
+          )}
+
+          {/* Marketing Texts - Bottom position */}
+          {marketingTexts.filter(t => t.position === 'bottom' && t.isActive).map((mt) => (
+            <div key={mt.id} className="max-w-7xl mx-auto px-6 py-12">
+               <div className="bg-slate-50 rounded-3xl p-10 text-center border border-slate-100">
+                  <h3 className="font-display font-black text-2xl text-slate-900 uppercase tracking-tighter mb-4">{mt.title}</h3>
+                  <p className="text-slate-600 font-medium max-w-2xl mx-auto">{mt.content}</p>
+               </div>
+            </div>
+          ))}
+
+            {/* Middle Video Banners */}
+            {categoryFilter === "all" && searchQuery === "" && videoBanners.filter(b => b.position === "middle" && b.isActive).map(banner => (
+              <ScrollVideoBanner 
+                key={banner.id} 
+                containerRef={mainScrollRef} 
+                banner={banner} 
+                onNavigate={setActiveTab} 
+                products={products}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
 
             {/* Info Banners (Third banner type) */}
             {categoryFilter === "all" && searchQuery === "" && (
-              <InfoBannerSection infoBanners={infoBanners} />
+              <InfoBannerSection 
+                infoBanners={infoBanners} 
+                onNavigateToCollection={(banner) => {
+                  setSelectedInfoBanner(banner);
+                }}
+                isAdmin={user?.isAdmin}
+                onGoToAdmin={() => setActiveTab("admin")}
+              />
             )}
 
             <div className="max-w-[1400px] mx-auto px-[4vw]">
@@ -571,6 +737,7 @@ export default function App() {
                 <CategoryThumbnails
                   currentCategory={categoryFilter}
                   setCategory={setCategoryFilter}
+                  setActiveTab={setActiveTab}
                 />
               )}
 
@@ -583,31 +750,49 @@ export default function App() {
               />
             )}
 
-            {/* Primary Product Grid Section / Custom Sablon DTF Workshop */}
-            {categoryFilter === "Sablon DTF" ? (
-              <SablonDtfView
-                dtfSettings={dtfSettings}
+            {/* Sablon DTF Teaser Section */}
+            {categoryFilter === "all" && searchQuery === "" && (
+              <DtfShowcase 
                 products={products}
+                onExplore={() => setActiveTab("sablon-dtf")}
                 onAddToCart={handleAddToCart}
+                onViewDetail={setSelectedDetailProduct}
               />
-            ) : (
+            )}
+
+            {/* Primary Product Grid Section / Custom Sablon DTF Workshop */}
+            <div id="catalog-section" className="scroll-mt-24">
               <ProductGrid
-                products={products}
+                products={products.filter(p => !p.isBannerProduct)}
                 categoryFilter={categoryFilter}
                 searchQuery={searchQuery}
                 onAddToCart={handleAddToCart}
                 onViewDetail={setSelectedDetailProduct}
-                onResetFilters={handleShopNow}
+                onToggleWishlist={toggleWishlist}
+                wishlist={wishlist}
               />
-            )}
+            </div>
 
             {/* Newsletter Subscription Box */}
             {categoryFilter === "all" && searchQuery === "" && (
               <Newsletter />
             )}
 
-            {/* Elegant Dark Footer matching the mockup */}
-            <footer className="mt-32 -mx-[4vw] px-[4vw] pt-20 pb-16 bg-[#111111] text-[#F8F7F4]/80 grid grid-cols-1 md:grid-cols-4 gap-12 border-t border-black">
+            {/* Bottom Video Banners */}
+            {categoryFilter === "all" && searchQuery === "" && videoBanners.filter(b => b.position === "bottom" && b.isActive).map(banner => (
+              <ScrollVideoBanner 
+                key={banner.id} 
+                containerRef={mainScrollRef} 
+                banner={banner} 
+                onNavigate={setActiveTab} 
+                products={products}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
+
+          {/* Elegant Rose-Blush Footer matching the beauty makeup theme */}
+            <footer className="mt-32 -mx-[4vw] px-[4vw] pt-20 pb-16 bg-white text-[#5C4649] grid grid-cols-1 md:grid-cols-5 gap-12 border-t border-gray-100">
               <div className="space-y-6">
                 {logoSettings?.logoUrl ? (
                   <div 
@@ -618,49 +803,57 @@ export default function App() {
                       alt="A-GIN" 
                       className="h-16 w-auto object-contain"
                       referrerPolicy="no-referrer"
-                      style={{ filter: 'invert(1) brightness(100)' }}
                     />
                   </div>
                 ) : (
-                  <div className="font-serif text-3xl font-light tracking-widest text-[#F8F7F4]">
-                    {logoSettings?.text || "A-GIN"} <span className="font-sans text-[0.6rem] tracking-[0.3em] text-[#A68966] uppercase block mt-1">{logoSettings?.highlightText || "STUDIO"}</span>
+                  <div className="font-serif text-3xl font-medium tracking-wide text-[#2F2022]">
+                    {logoSettings?.text || "A-GIN"} <span className="font-sans text-[8px] tracking-[0.3em] text-[#D46A7A] font-black uppercase block mt-1">{logoSettings?.highlightText || "FASHION"}</span>
                   </div>
                 )}
-                <p className="text-[0.8rem] font-light leading-relaxed max-w-xs text-[#F8F7F4]/60 mt-4">
+                <p className="text-[0.8rem] font-light leading-relaxed max-w-xs text-[#5C4649]/80 mt-4">
                   Koleksi fashion premium dengan detail presisi dan material berkualitas tinggi untuk gaya hidup modern.
                 </p>
-                <div className="flex gap-4 text-[#F8F7F4]/60 text-lg">
-                  <a href="https://instagram.com/andho_rakat_ntt" target="_blank" rel="noreferrer" className="hover:text-[#A68966] transition-colors">📸</a>
-                  <a href="#" className="hover:text-[#A68966] transition-colors">🎵</a>
-                  <a href="https://wa.me/6281219154973" target="_blank" rel="noreferrer" className="hover:text-[#A68966] transition-colors">💬</a>
+                <div className="flex gap-4 text-[#D46A7A] text-lg">
+                  <a href="https://instagram.com/andho_rakat_ntt" target="_blank" rel="noreferrer" className="hover:text-[#C55263] transition-colors">📸</a>
+                  <a href="#" className="hover:text-[#C55263] transition-colors">🎵</a>
+                  <a href="https://wa.me/6281219154973" target="_blank" rel="noreferrer" className="hover:text-[#C55263] transition-colors">💬</a>
                 </div>
               </div>
               
               <div className="space-y-4">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#A68966] font-bold">SHOP</p>
-                <ul className="space-y-2.5 text-[0.8rem] font-light text-[#F8F7F4]/60 list-none p-0 m-0">
-                  <li><button onClick={() => setCategoryFilter("all")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">All Products</button></li>
-                  <li><button onClick={() => setCategoryFilter("Promo")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">New Arrivals</button></li>
-                  <li><button onClick={() => setCategoryFilter("Women")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Women's Collection</button></li>
-                  <li><button onClick={() => setCategoryFilter("Men")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Men's Collection</button></li>
+                <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#D46A7A] font-black">SHOP</p>
+                <ul className="space-y-2.5 text-[0.8rem] font-medium text-[#5C4649]/80 list-none p-0 m-0">
+                  <li><button onClick={() => setCategoryFilter("all")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">All Products</button></li>
+                  <li><button onClick={() => setCategoryFilter("Promo")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">New Arrivals</button></li>
+                  <li><button onClick={() => setCategoryFilter("Women")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Women's Collection</button></li>
+                  <li><button onClick={() => setCategoryFilter("Men")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Men's Collection</button></li>
                 </ul>
               </div>
 
               <div className="space-y-4">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#A68966] font-bold">CUSTOMER CARE</p>
-                <ul className="space-y-2.5 text-[0.8rem] font-light text-[#F8F7F4]/60 list-none p-0 m-0">
-                  <li><button onClick={() => handleOpenInfoTab("contact")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Contact Us</button></li>
-                  <li><button onClick={() => handleOpenInfoTab("shipping")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Shipping & Delivery</button></li>
-                  <li><button onClick={() => handleOpenInfoTab("returns")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Returns & Exchanges</button></li>
-                  <li><button onClick={() => handleOpenInfoTab("size-guide")} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Size Guide</button></li>
+                <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#D46A7A] font-black">CUSTOMER CARE</p>
+                <ul className="space-y-2.5 text-[0.8rem] font-medium text-[#5C4649]/80 list-none p-0 m-0">
+                  <li><button onClick={() => handleOpenInfoTab("contact")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Contact Us</button></li>
+                  <li><button onClick={() => handleOpenInfoTab("shipping")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Shipping & Delivery</button></li>
+                  <li><button onClick={() => handleOpenInfoTab("returns")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Returns & Exchanges</button></li>
+                  <li><button onClick={() => handleOpenInfoTab("size-guide")} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-left">Size Guide</button></li>
+                  <li><button onClick={() => setIsOrderTrackingOpen(true)} className="hover:text-[#D46A7A] transition-colors cursor-pointer bg-transparent border-none p-0 text-[#D46A7A] font-bold text-left flex items-center gap-1.5">📦 Order Tracking</button></li>
                 </ul>
               </div>
 
               <div className="space-y-4">
-                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#A68966] font-bold">STAY CONNECTED</p>
-                <p className="text-[0.8rem] font-light text-[#F8F7F4]/60">Sign up for updates and get 10% off your next purchase.</p>
+                <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#D46A7A] font-black">PAYMENT & DELIVERY</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <img src="/uploads/upload_logo_processed_1783612821680_osvcx.png" alt="Logo" className="h-8 w-auto object-contain" />
+                  <img src="/uploads/upload_logo_processed_1783605564517_a6y1h.png" alt="Logo" className="h-8 w-auto object-contain" />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#D46A7A] font-black">STAY CONNECTED</p>
+                <p className="text-[0.8rem] font-light text-[#5C4649]/80">Sign up for updates and get 10% off your next purchase.</p>
                 {footerSubscribed ? (
-                  <div className="bg-[#222222] text-[#F8F7F4] font-mono text-[0.6rem] uppercase tracking-wider px-4 py-3 rounded-full text-center border border-emerald-800 text-emerald-400">
+                  <div className="bg-[#D46A7A] text-white font-sans text-[10px] font-bold uppercase tracking-wider px-4 py-3 rounded-full text-center border border-[#EAA0A9]/30 text-emerald-400 shadow-sm">
                     ✨ Subscribed! Thank you.
                   </div>
                 ) : (
@@ -671,64 +864,173 @@ export default function App() {
                       placeholder="Enter email" 
                       value={footerEmail}
                       onChange={(e) => setFooterEmail(e.target.value)}
-                      className="bg-[#222222] text-white border border-[#333333] rounded-full px-4 py-2 text-xs focus:outline-none focus:border-[#A68966] flex-1"
+                      className="bg-white text-[#2F2022] border border-[#EAA0A9]/30 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-[#D46A7A] flex-1 font-medium"
                     />
-                    <button type="submit" className="bg-white text-black font-mono text-[0.65rem] uppercase tracking-wider font-bold px-4 py-2 rounded-full hover:bg-white/80 transition-all cursor-pointer">
+                    <button type="submit" className="bg-[#D46A7A] hover:bg-[#C55263] text-white font-sans text-[11px] uppercase tracking-wider font-bold px-4 py-2 rounded-full transition-all cursor-pointer shadow-md">
                       →
                     </button>
                   </form>
                 )}
               </div>
 
-              <div className="col-span-1 md:col-span-4 pt-12 mt-8 border-t border-[#F8F7F4]/10 text-center flex flex-col md:flex-row justify-between items-center gap-4 text-[0.7rem] text-[#F8F7F4]/40 uppercase tracking-[0.15em] font-mono">
+              {/* Payment and Courier Logos for Trust */}
+              <div className="col-span-1 md:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 border-t border-[#EAA0A9]/20 pt-8">
+                <div>
+                  <h4 className="text-[10px] font-black text-[#5C4649] uppercase tracking-[0.2em] mb-4 text-center md:text-left">Metode Pembayaran</h4>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 items-center">
+                    <BrandLogo brand="QRIS" className="h-4 w-auto grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100" />
+                    <BrandLogo brand="VA_BCA" className="h-4 w-auto grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100" />
+                    <BrandLogo brand="VA_MANDIRI" className="h-3 w-auto grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100" />
+                    <BrandLogo brand="VA_BRI" className="h-4 w-auto grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100" />
+                    <BrandLogo brand="VA_BNI" className="h-4 w-auto grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-[#5C4649] uppercase tracking-[0.2em] mb-4 text-center md:text-left">Kurir Pengiriman</h4>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 items-center">
+                    <BrandLogo brand="JNE" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="J&T" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="SICEPAT" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="GOJEK" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="GRAB" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="POS" className="h-5 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="NINJA" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="TIKI" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="IDEXPRESS" className="h-4 w-auto hover:opacity-80 transition-all" />
+                    <BrandLogo brand="LALAMOVE" className="h-4 w-auto hover:opacity-80 transition-all" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-1 md:col-span-5 pt-12 mt-8 border-t border-[#EAA0A9]/20 text-center flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-[#5C4649]/60 uppercase tracking-[0.18em] font-bold">
                 <p>© 2026 {logoSettings?.text || "A-GIN"} STUDIO. ALL RIGHTS RESERVED.</p>
                 <p>Designed by Andho Rakat NTT</p>
               </div>
             </footer>
-          </div>
-          </div>
-        )}
-      </main>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </main>
 
       {/* 3. Slide-out Cart Drawer Panel */}
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        onUpdateQuantity={handleUpdateCartQuantity}
-        onUpdateSize={handleUpdateCartSize}
-        onRemoveItem={handleRemoveCartItem}
-      />
+      <AnimatePresence>
+        {isCartOpen && (
+          <motion.div key="cart-drawer">
+            <CartDrawer
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              cart={cart}
+              user={user}
+              onUpdateQuantity={handleUpdateCartQuantity}
+              onUpdateSize={handleUpdateCartSize}
+              onRemoveItem={handleRemoveCartItem}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 4. Auth Register/Login Modal */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
+      <AnimatePresence>
+        {isAuthOpen && (
+          <motion.div key="auth-modal">
+            <AuthModal
+              isOpen={isAuthOpen}
+              onClose={() => setIsAuthOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 5. Product Detail Zoom Modal */}
-      <ProductDetailModal
-        product={selectedDetailProduct}
-        allProducts={products}
-        onClose={() => setSelectedDetailProduct(null)}
-        onAddToCart={handleAddToCart}
-      />
+      <AnimatePresence>
+        {selectedDetailProduct && (
+          <motion.div 
+            key={`detail-${selectedDetailProduct.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70]"
+          >
+            <ProductDetailModal
+              product={selectedDetailProduct}
+              allProducts={products}
+              onClose={() => setSelectedDetailProduct(null)}
+              onAddToCart={handleAddToCart}
+              logoSettings={logoSettings}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 6. Profile Customization Modal */}
-      <ProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        user={user}
-        onUpdateUser={handleUpdateUser}
-      />
+      <AnimatePresence>
+        {isProfileOpen && (
+          <motion.div key="profile-modal">
+            <ProfileModal
+              isOpen={isProfileOpen}
+              onClose={() => setIsProfileOpen(false)}
+              user={user}
+              onUpdateUser={handleUpdateUser}
+              wishlist={wishlist}
+              onToggleWishlist={toggleWishlist}
+              onAddToCart={handleAddToCart}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 7. General Brand Information Help Modal */}
-      <InfoModal 
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        tab={infoTab}
-      />
+      <AnimatePresence>
+        {isInfoOpen && (
+          <motion.div key="info-modal">
+            <InfoModal 
+              isOpen={isInfoOpen}
+              onClose={() => setIsInfoOpen(false)}
+              tab={infoTab}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 8. Biteship Order Tracking Modal */}
+      <AnimatePresence>
+        {isOrderTrackingOpen && (
+          <motion.div key="order-tracking-modal">
+            <OrderTrackingModal 
+              isOpen={isOrderTrackingOpen}
+              onClose={() => setIsOrderTrackingOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 9. Nike-Style Info Banner Collection Pop-up Modal Overlay */}
+      <AnimatePresence>
+        {selectedInfoBanner && (
+          <motion.div 
+            key="info-banner-collection-popup"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 150 }}
+            className="fixed inset-0 z-50 bg-white overflow-y-auto no-scrollbar"
+          >
+            <InfoBannerCollectionView 
+              banner={selectedInfoBanner}
+              products={products}
+              onAddToCart={handleAddToCart}
+              onBack={() => {
+                setSelectedInfoBanner(null);
+              }}
+              user={user}
+              onReloadProducts={fetchProducts}
+              onViewDetail={setSelectedDetailProduct}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

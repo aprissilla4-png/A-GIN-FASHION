@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { DtfSettings, Product } from "../types";
 import { db, storage, auth } from "../lib/firebase";
+import MapAddressPicker from "./MapAddressPicker";
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -136,6 +137,69 @@ export default function SablonDtfView({
   const [invert, setInvert] = useState<number>(0);
   const [flipX, setFlipX] = useState<boolean>(false);
   const [flipY, setFlipY] = useState<boolean>(false);
+
+  const bannerVideoRef = useRef<HTMLVideoElement>(null);
+  const dtfYtId = dtfSettings.bannerVideo ? (() => {
+    const match = dtfSettings.bannerVideo.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+    return match ? match[1] : null;
+  })() : null;
+
+  useEffect(() => {
+    const video = bannerVideoRef.current;
+    if (video && !dtfYtId) {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("muted", "true");
+      video.setAttribute("playsinline", "true");
+
+      const playVideo = () => {
+        video.play().catch((err) => {
+          console.log("DTF Banner Autoplay prevented:", err.message);
+        });
+      };
+
+      const handleCanPlay = () => {
+        playVideo();
+      };
+
+      video.addEventListener("canplay", handleCanPlay);
+      video.addEventListener("loadedmetadata", handleCanPlay);
+
+      // Force video load/reload when the source URL changes first
+      video.load();
+
+      // Then attempt to play
+      playVideo();
+
+      const resumePlay = () => {
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
+        window.removeEventListener("click", resumePlay);
+        window.removeEventListener("touchstart", resumePlay);
+        window.removeEventListener("scroll", resumePlay, { capture: true });
+        window.removeEventListener("mousemove", resumePlay);
+        window.removeEventListener("keydown", resumePlay);
+      };
+
+      window.addEventListener("click", resumePlay);
+      window.addEventListener("touchstart", resumePlay);
+      window.addEventListener("scroll", resumePlay, { capture: true, passive: true });
+      window.addEventListener("mousemove", resumePlay);
+      window.addEventListener("keydown", resumePlay);
+
+      return () => {
+        video.removeEventListener("canplay", handleCanPlay);
+        video.removeEventListener("loadedmetadata", handleCanPlay);
+        window.removeEventListener("click", resumePlay);
+        window.removeEventListener("touchstart", resumePlay);
+        window.removeEventListener("scroll", resumePlay, { capture: true });
+        window.removeEventListener("mousemove", resumePlay);
+        window.removeEventListener("keydown", resumePlay);
+      };
+    }
+  }, [dtfSettings.bannerVideo, dtfYtId]);
 
   // Dragging event state
   const [isDragging, setIsDragging] = useState(false);
@@ -660,6 +724,37 @@ export default function SablonDtfView({
     }
   };
 
+  const handleAutoCenter = () => {
+    setPosX(0);
+    setPosY(-20);
+    setScale(1.0);
+    setRotation(0);
+  };
+
+  const handleDownloadMockup = async () => {
+    if (!mockupContainerRef.current) return;
+    
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(mockupContainerRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2 // High quality
+      });
+      
+      const link = document.createElement("a");
+      link.download = `GIN-DTF-Mockup-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      
+      setOrderMessage("Mockup berhasil diunduh!");
+      setTimeout(() => setOrderMessage(""), 3000);
+    } catch (err) {
+      console.error("Failed to generate mockup image:", err);
+      alert("Gagal mengunduh mockup. Pastikan koneksi internet stabil.");
+    }
+  };
+
   const handleResetDesign = () => {
     setCustomDesignFile(null);
     setCustomDesignUrl("");
@@ -683,14 +778,38 @@ export default function SablonDtfView({
   return (
     <div className="space-y-6 animate-fade-in pb-16 bg-slate-50/50">
       {/* DTF COVER BRANDING BANNER */}
-      <div className="relative overflow-hidden h-[240px] md:h-[320px] rounded-3xl mx-4 md:mx-6 shadow-xl border border-slate-200">
-        <img
-          src={dtfSettings.bannerImage || "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400"}
-          alt="DTF Printing Studio"
-          className="w-full h-full object-cover select-none"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-900/60 to-transparent flex flex-col justify-end p-6 md:p-10 text-white">
+      <div className="relative overflow-hidden h-[240px] md:h-[360px] rounded-3xl mx-4 md:mx-6 shadow-2xl border border-slate-200 bg-slate-950">
+        {dtfSettings.bannerVideo ? (
+          dtfYtId ? (
+            <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+              <iframe
+                src={`https://www.youtube.com/embed/${dtfYtId}?autoplay=1&mute=1&loop=1&playlist=${dtfYtId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1`}
+                className="w-full h-full pointer-events-none opacity-50 scale-[1.35] origin-center"
+                allow="autoplay; encrypted-media"
+                title="DTF Banner Video"
+              />
+            </div>
+          ) : (
+            <video
+              key={dtfSettings.bannerVideo}
+              ref={bannerVideoRef}
+              src={dtfSettings.bannerVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-60"
+            />
+          )
+        ) : (
+          <img
+            src={dtfSettings.bannerImage || "https://images.unsplash.com/photo-1513346038379-7ff156f74a8a?auto=format&fit=crop&q=80&w=1400"}
+            alt="DTF Printing Studio"
+            className="w-full h-full object-cover select-none opacity-80"
+            referrerPolicy="no-referrer"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent flex flex-col justify-end p-6 md:p-10 text-white">
           <div className="max-w-2xl space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">
               <Zap className="w-3 h-3 text-yellow-300 animate-pulse" />
@@ -768,6 +887,12 @@ export default function SablonDtfView({
                     <span>Interactive Mockup Simulator</span>
                   </span>
                   <div className="flex gap-1">
+                    <button onClick={handleAutoCenter} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200" title="Auto Center">
+                      <Maximize2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={handleDownloadMockup} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200" title="Download Mockup PNG">
+                      <Folder className="w-4 h-4" />
+                    </button>
                     <button onClick={() => setIsBackView(!isBackView)} className="p-2 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200" title="Balik Kaos">
                       <RefreshCw className="w-4 h-4" />
                     </button>
@@ -1604,6 +1729,40 @@ export default function SablonDtfView({
                   </div>
                 </div>
 
+                {/* PRICE BREAKDOWN PANEL */}
+                <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Rincian Estimasi Biaya</span>
+                    <span className="px-2 py-0.5 bg-emerald-500 text-[8px] font-black text-white rounded uppercase tracking-widest">Harga Terbaik</span>
+                  </div>
+                  
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-bold">Layanan Sablon ({designSize.toUpperCase()})</span>
+                      <span className="text-white font-mono font-bold">Rp {totalPricePerItem.toLocaleString()}</span>
+                    </div>
+                    {sizeSurcharge > 0 && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400 font-bold">Surcharge Ukuran Kaos ({selectedSize})</span>
+                        <span className="text-white font-mono font-bold">+ Rp {sizeSurcharge.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-800">
+                      <span className="text-slate-400 font-bold">Subtotal ({quantity} pcs)</span>
+                      <span className="text-white font-mono font-bold">Rp {totalOrderPrice.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 bg-emerald-950/30 p-3 rounded-xl border border-emerald-900/30">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                      <p className="text-[9px] text-emerald-100 font-medium leading-relaxed">
+                        *Harga di atas adalah estimasi jasa cetak DTF. Total akhir akan dihitung otomatis di keranjang belanja termasuk harga kaos polos pilihan Anda.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* ACTION SUBMIT BUTTONS */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
@@ -1848,7 +2007,7 @@ export default function SablonDtfView({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {galleryDesigns.map((item, idx) => (
                   <div 
-                    key={item.id || idx}
+                    key={item.id ? `gallery-${item.id}` : `gallery-${idx}`}
                     className="bg-slate-50 rounded-2xl p-3 border border-slate-250/50 hover:shadow-lg transition-all group flex flex-col justify-between"
                   >
                     <div className="aspect-square w-full rounded-xl bg-white overflow-hidden border border-slate-200 flex items-center justify-center relative shadow-sm">
@@ -1883,7 +2042,15 @@ export default function SablonDtfView({
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <h2 className="text-lg font-black text-slate-900">Checkout Pengiriman</h2>
             <input type="text" placeholder="Nama Lengkap" value={shippingInfo.name} onChange={e => setShippingInfo({...shippingInfo, name: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
-            <input type="text" placeholder="Alamat Lengkap" value={shippingInfo.address} onChange={e => setShippingInfo({...shippingInfo, address: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Alamat Lengkap</label>
+              <MapAddressPicker
+                value={shippingInfo.address}
+                onChange={(address) => setShippingInfo({...shippingInfo, address})}
+                placeholder="Alamat Lengkap"
+                isTextArea={false}
+              />
+            </div>
             <input type="text" placeholder="No Telepon" value={shippingInfo.phone} onChange={e => setShippingInfo({...shippingInfo, phone: e.target.value})} className="w-full p-2 border rounded-lg text-sm" />
             <button onClick={handleSaveDesign} className="w-full py-2 bg-red-600 text-white rounded-lg font-black text-sm">Simpan Desain & Kirim</button>
             <button onClick={() => setIsCheckoutOpen(false)} className="w-full py-2 text-slate-600 text-sm font-bold">Batal</button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Loader2, Upload, Trash2, Check } from "lucide-react";
 import { motion } from "motion/react";
 import ImageUploadButton from "./ImageUploadButton";
+import VideoUploadButton from "./VideoUploadButton";
 
 interface MediaItem {
   id: string;
@@ -41,7 +42,25 @@ export default function MediaGalleryModal({ isOpen, onClose, onSelect }: MediaGa
   };
 
   const handleUploadSuccess = async (url: string, type: "image" | "video") => {
-    fetchMedia();
+    try {
+      const res = await fetch("/api/media", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type,
+          url,
+          title: url.split("/").pop() || "Media Baru"
+        })
+      });
+      if (res.ok) {
+        fetchMedia();
+      } else {
+        const errData = await res.json();
+        console.error("Gagal mendaftarkan media ke galeri:", errData.error || "Unknown error");
+      }
+    } catch (err) {
+      console.error("Error saving media to DB:", err);
+    }
   };
 
   return (
@@ -96,8 +115,15 @@ export default function MediaGalleryModal({ isOpen, onClose, onSelect }: MediaGa
             </div>
           )}
         </div>
-        <div className="p-4 border-t border-slate-150">
-           <ImageUploadButton label="Upload Media Baru" onUploadSuccess={(url) => handleUploadSuccess(url, "image")} />
+        <div className="p-4 border-t border-slate-150 flex flex-wrap items-center gap-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unggah Gambar</span>
+            <ImageUploadButton multiple label="Pilih Gambar" onUploadSuccess={(url) => handleUploadSuccess(url, "image")} />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Unggah Video</span>
+            <VideoUploadButton label="Pilih Video" onUploadSuccess={(url) => handleUploadSuccess(url, "video")} />
+          </div>
         </div>
       </div>
     </div>

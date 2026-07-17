@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 interface CategoryThumbnailsProps {
   currentCategory: string;
   setCategory: (category: string) => void;
+  setActiveTab: (tab: any) => void;
 }
 
 interface Category {
@@ -11,7 +12,7 @@ interface Category {
   image: string;
 }
 
-export default function CategoryThumbnails({ currentCategory, setCategory }: CategoryThumbnailsProps) {
+export default function CategoryThumbnails({ currentCategory, setCategory, setActiveTab }: CategoryThumbnailsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -23,8 +24,17 @@ export default function CategoryThumbnails({ currentCategory, setCategory }: Cat
       .catch(console.error);
   }, []);
 
+  const handleCategoryClick = (catId: string, label: string) => {
+    if (label === "Sablon DTF" || catId === "Sablon DTF") {
+      setActiveTab("sablon-dtf");
+    } else {
+      setActiveTab("home");
+      setCategory(catId);
+    }
+  };
+
   return (
-    <div className="py-12 border-b border-[#1B1B1B]/10 max-w-4xl mx-auto">
+    <div className="py-8 my-6 bg-transparent max-w-4xl mx-auto px-6">
       <div className="flex items-center justify-center gap-6 md:gap-10 overflow-x-auto no-scrollbar px-4">
         {categories.map((cat) => {
           const isActive = currentCategory === cat.id;
@@ -32,15 +42,15 @@ export default function CategoryThumbnails({ currentCategory, setCategory }: Cat
           return (
             <button
               key={cat.id}
-              onClick={() => setCategory(cat.id)}
+              onClick={() => handleCategoryClick(cat.id, cat.label)}
               className="flex flex-col items-center flex-shrink-0 group focus:outline-none"
             >
               {cat.id === "Promo" || cat.label.toLowerCase().includes("sale") ? (
                 <div 
-                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center font-mono font-semibold text-[0.65rem] tracking-widest uppercase transition-all duration-300 ${
+                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center font-sans font-black text-[0.65rem] tracking-widest uppercase transition-all duration-300 ${
                     isActive 
-                      ? "bg-[#A68966] text-white scale-105 ring-2 ring-[#A68966] ring-offset-2" 
-                      : "bg-black text-white hover:bg-black/90 hover:scale-105"
+                      ? "bg-[#D46A7A] text-white scale-105 ring-2 ring-[#D46A7A] ring-offset-2" 
+                      : "bg-[#EAA0A9] text-white hover:bg-[#D46A7A] hover:scale-105"
                   }`}
                 >
                   SALE
@@ -49,8 +59,8 @@ export default function CategoryThumbnails({ currentCategory, setCategory }: Cat
                 <div 
                   className={`w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border p-0.5 transition-all duration-300 bg-white ${
                     isActive 
-                      ? "border-[#A68966] scale-105 ring-2 ring-[#A68966] ring-offset-2" 
-                      : "border-black/10 hover:border-black/30 hover:scale-105"
+                      ? "border-[#D46A7A] scale-105 ring-2 ring-[#D46A7A] ring-offset-2" 
+                      : "border-black/5 hover:border-[#D46A7A]/40 hover:scale-105"
                   }`}
                 >
                   <img
@@ -61,8 +71,8 @@ export default function CategoryThumbnails({ currentCategory, setCategory }: Cat
                 </div>
               )}
               <span 
-                className={`mt-3 font-mono text-[0.65rem] uppercase tracking-wider transition-colors duration-200 ${
-                  isActive ? "text-[#A68966] font-semibold" : "text-[#1B1B1B]/60 group-hover:text-[#1B1B1B]"
+                className={`mt-3 font-sans text-[11px] font-bold uppercase tracking-wider transition-colors duration-200 ${
+                  isActive ? "text-[#D46A7A]" : "text-[#5C4649]/60 group-hover:text-[#D46A7A]"
                 }`}
               >
                 {cat.label}

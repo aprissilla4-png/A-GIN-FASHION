@@ -1,0 +1,660 @@
+Line 1686 [depth=0]: // PRODUCT CRUD GRID
+Line 1687 [depth=1]: <div className="space-y-6">
+Line 1688 [depth=1]: {/* Sub Tab Navigation */}
+Line 1689 [depth=2]: <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-xl inline-flex mb-2">
+Line 1690 [depth=2]: <button
+Line 1691 [depth=2]: onClick={() => { setProductTab("main"); clearForm(); }}
+Line 1692 [depth=2]: className={`px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+Line 1693 [depth=2]: productTab === "main" ? "bg-white text-emerald-950 shadow-sm" : "text-slate-500 hover:text-slate-900"
+Line 1694 [depth=2]: }`}
+Line 1695 [depth=2]: >
+Line 1696 [depth=2]: Produk Utama
+Line 1697 [depth=2]: </button>
+Line 1698 [depth=2]: <button
+Line 1699 [depth=2]: onClick={() => { setProductTab("banner"); clearForm(); setIsBannerProduct(true); }}
+Line 1700 [depth=2]: className={`px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+Line 1701 [depth=2]: productTab === "banner" ? "bg-white text-emerald-950 shadow-sm" : "text-slate-500 hover:text-slate-900"
+Line 1702 [depth=2]: }`}
+Line 1703 [depth=2]: >
+Line 1704 [depth=2]: Produk Koleksi Banner
+Line 1705 [depth=2]: </button>
+Line 1706 [depth=1]: </div>
+Line 1707 [depth=1]: 
+Line 1708 [depth=2]: <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+Line 1709 [depth=2]: {/* Form Create/Edit - Left side */}
+Line 1710 [depth=3]: <div className="lg:col-span-1 space-y-6">
+Line 1711 [depth=3]: <div
+Line 1712 [depth=3]: id="admin-product-form"
+Line 1713 [depth=3]: className="bg-white rounded-2xl border border-slate-200 p-6 shadow-md shadow-slate-100/50 space-y-5 sticky top-20 z-20"
+Line 1714 [depth=3]: >
+Line 1715 [depth=4]: <div className="flex items-center justify-between">
+Line 1716 [depth=4]: <h3 className="font-extrabold text-emerald-950 text-sm flex items-center gap-2">
+Line 1717 [depth=4]: <Package className="w-4 h-4 text-red-600" />
+Line 1718 [depth=4]: <span>{isEditing ? "Edit Produk Sablon" : "Upload Produk Print DTF Baru"}</span>
+Line 1719 [depth=4]: </h3>
+Line 1720 [depth=4]: {isEditing && (
+Line 1721 [depth=4]: <button
+Line 1722 [depth=4]: onClick={clearForm}
+Line 1723 [depth=4]: className="text-xs text-red-600 hover:underline font-bold cursor-pointer"
+Line 1724 [depth=4]: >
+Line 1725 [depth=4]: Batal Edit
+Line 1726 [depth=4]: </button>
+Line 1727 [depth=4]: )}
+Line 1728 [depth=3]: </div>
+Line 1729 [depth=3]: 
+Line 1730 [depth=3]: <form onSubmit={handleSubmit} className="space-y-4">
+Line 1731 [depth=4]: <div className="space-y-1.5">
+Line 1732 [depth=4]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1733 [depth=4]: Tipe Produk <span className="text-red-500">*</span>
+Line 1734 [depth=4]: </label>
+Line 1735 [depth=5]: <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-lg border border-slate-200">
+Line 1736 [depth=5]: <label className="flex items-center gap-2 cursor-pointer">
+Line 1737 [depth=5]: <input
+Line 1738 [depth=5]: type="radio"
+Line 1739 [depth=5]: name="productType"
+Line 1740 [depth=5]: value="fashion"
+Line 1741 [depth=5]: checked={productType === "fashion"}
+Line 1742 [depth=5]: onChange={() => {
+Line 1743 [depth=5]: setProductType("fashion");
+Line 1744 [depth=5]: if (category === "Kaos" || category === "Hoodie" || category === "Jacket") {
+Line 1745 [depth=5]: setCategory("all");
+Line 1746 [depth=5]: }
+Line 1747 [depth=5]: }}
+Line 1748 [depth=5]: className="accent-red-600"
+Line 1749 [depth=5]: />
+Line 1750 [depth=5]: <span className="text-xs font-bold text-slate-700">Fashion Store</span>
+Line 1751 [depth=5]: </label>
+Line 1752 [depth=5]: <label className="flex items-center gap-2 cursor-pointer">
+Line 1753 [depth=5]: <input
+Line 1754 [depth=5]: type="radio"
+Line 1755 [depth=5]: name="productType"
+Line 1756 [depth=5]: value="dtf"
+Line 1757 [depth=5]: checked={productType === "dtf"}
+Line 1758 [depth=5]: onChange={() => {
+Line 1759 [depth=5]: setProductType("dtf");
+Line 1760 [depth=5]: setCategory("Kaos");
+Line 1761 [depth=5]: }}
+Line 1762 [depth=5]: className="accent-red-600"
+Line 1763 [depth=5]: />
+Line 1764 [depth=5]: <span className="text-xs font-bold text-slate-700">Print DTF</span>
+Line 1765 [depth=5]: </label>
+Line 1766 [depth=4]: </div>
+Line 1767 [depth=3]: </div>
+Line 1768 [depth=3]: 
+Line 1769 [depth=3]: {/* Product Name */}
+Line 1770 [depth=4]: <div className="space-y-1.5">
+Line 1771 [depth=4]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1772 [depth=4]: Nama Produk <span className="text-red-500">*</span>
+Line 1773 [depth=4]: </label>
+Line 1774 [depth=4]: <input
+Line 1775 [depth=4]: type="text"
+Line 1776 [depth=4]: placeholder="Kaos Polos Cotton Combed 30s + Print DTF"
+Line 1777 [depth=4]: value={name}
+Line 1778 [depth=4]: onChange={(e) => setName(e.target.value)}
+Line 1779 [depth=4]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1780 [depth=4]: />
+Line 1781 [depth=3]: </div>
+Line 1782 [depth=3]: 
+Line 1783 [depth=3]: {/* Product Code */}
+Line 1784 [depth=4]: <div className="space-y-1.5">
+Line 1785 [depth=4]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1786 [depth=4]: Kode Produk (Opsional)
+Line 1787 [depth=4]: </label>
+Line 1788 [depth=4]: <input
+Line 1789 [depth=4]: type="text"
+Line 1790 [depth=4]: placeholder="PRD-001"
+Line 1791 [depth=4]: value={productCode}
+Line 1792 [depth=4]: onChange={(e) => setProductCode(e.target.value)}
+Line 1793 [depth=4]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1794 [depth=4]: />
+Line 1795 [depth=3]: </div>
+Line 1796 [depth=3]: 
+Line 1797 [depth=3]: {productType === "dtf" && (
+Line 1798 [depth=4]: <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+Line 1799 [depth=5]: <div className="space-y-1.5 col-span-2">
+Line 1800 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1801 [depth=5]: Ukuran Cetak (e.g. A4, A3, Logo)
+Line 1802 [depth=5]: </label>
+Line 1803 [depth=5]: <input
+Line 1804 [depth=5]: type="text"
+Line 1805 [depth=5]: placeholder="A4 (21 x 29.7 cm)"
+Line 1806 [depth=5]: value={printSize}
+Line 1807 [depth=5]: onChange={(e) => setPrintSize(e.target.value)}
+Line 1808 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1809 [depth=5]: />
+Line 1810 [depth=4]: </div>
+Line 1811 [depth=5]: <div className="space-y-1.5">
+Line 1812 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1813 [depth=5]: Lebar
+Line 1814 [depth=5]: </label>
+Line 1815 [depth=5]: <input
+Line 1816 [depth=5]: type="number"
+Line 1817 [depth=5]: placeholder="21"
+Line 1818 [depth=5]: value={width}
+Line 1819 [depth=5]: onChange={(e) => setWidth(e.target.value)}
+Line 1820 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1821 [depth=5]: />
+Line 1822 [depth=4]: </div>
+Line 1823 [depth=5]: <div className="space-y-1.5">
+Line 1824 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1825 [depth=5]: Tinggi
+Line 1826 [depth=5]: </label>
+Line 1827 [depth=5]: <input
+Line 1828 [depth=5]: type="number"
+Line 1829 [depth=5]: placeholder="29"
+Line 1830 [depth=5]: value={height}
+Line 1831 [depth=5]: onChange={(e) => setHeight(e.target.value)}
+Line 1832 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1833 [depth=5]: />
+Line 1834 [depth=4]: </div>
+Line 1835 [depth=5]: <div className="space-y-1.5 col-span-2">
+Line 1836 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1837 [depth=5]: Satuan
+Line 1838 [depth=5]: </label>
+Line 1839 [depth=5]: <select
+Line 1840 [depth=5]: value={unit}
+Line 1841 [depth=5]: onChange={(e) => setUnit(e.target.value as any)}
+Line 1842 [depth=5]: className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-semibold"
+Line 1843 [depth=5]: >
+Line 1844 [depth=5]: <option value="cm">cm (Centimeter)</option>
+Line 1845 [depth=5]: <option value="mm">mm (Millimeter)</option>
+Line 1846 [depth=5]: <option value="inch">inch (Inchi)</option>
+Line 1847 [depth=5]: </select>
+Line 1848 [depth=4]: </div>
+Line 1849 [depth=3]: </div>
+Line 1850 [depth=3]: )}
+Line 1851 [depth=3]: 
+Line 1852 [depth=3]: {/* Price & Original Price */}
+Line 1853 [depth=4]: <div className="grid grid-cols-2 gap-3">
+Line 1854 [depth=5]: <div className="space-y-1.5">
+Line 1855 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1856 [depth=5]: Harga Jual <span className="text-red-500">*</span>
+Line 1857 [depth=5]: </label>
+Line 1858 [depth=6]: <div className="relative">
+Line 1859 [depth=6]: <span className="text-slate-400 text-xs font-bold absolute left-3 top-1/2 -translate-y-1/2">Rp</span>
+Line 1860 [depth=6]: <input
+Line 1861 [depth=6]: type="number"
+Line 1862 [depth=6]: placeholder="150000"
+Line 1863 [depth=6]: value={price}
+Line 1864 [depth=6]: onChange={(e) => setPrice(e.target.value)}
+Line 1865 [depth=6]: className="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1866 [depth=6]: />
+Line 1867 [depth=5]: </div>
+Line 1868 [depth=4]: </div>
+Line 1869 [depth=5]: <div className="space-y-1.5">
+Line 1870 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1871 [depth=5]: Harga Coret (Rp)
+Line 1872 [depth=5]: </label>
+Line 1873 [depth=6]: <div className="relative">
+Line 1874 [depth=6]: <span className="text-slate-400 text-xs font-bold absolute left-3 top-1/2 -translate-y-1/2">Rp</span>
+Line 1875 [depth=6]: <input
+Line 1876 [depth=6]: type="number"
+Line 1877 [depth=6]: placeholder="250000"
+Line 1878 [depth=6]: value={originalPrice}
+Line 1879 [depth=6]: onChange={(e) => setOriginalPrice(e.target.value)}
+Line 1880 [depth=6]: className="w-full text-xs pl-8 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1881 [depth=6]: />
+Line 1882 [depth=5]: </div>
+Line 1883 [depth=4]: </div>
+Line 1884 [depth=3]: </div>
+Line 1885 [depth=3]: 
+Line 1886 [depth=3]: {/* Category & Stock */}
+Line 1887 [depth=4]: <div className="grid grid-cols-2 gap-3">
+Line 1888 [depth=5]: <div className="space-y-1.5">
+Line 1889 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1890 [depth=5]: Kategori <span className="text-red-500">*</span>
+Line 1891 [depth=5]: </label>
+Line 1892 [depth=5]: <select
+Line 1893 [depth=5]: value={category}
+Line 1894 [depth=5]: onChange={(e) => setCategory(e.target.value)}
+Line 1895 [depth=5]: className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-semibold"
+Line 1896 [depth=5]: >
+Line 1897 [depth=5]: {productType === "dtf" ? (
+Line 1898 [depth=5]: <>
+Line 1899 [depth=5]: <option value="Kaos">Kaos</option>
+Line 1900 [depth=5]: <option value="Hoodie">Hoodie</option>
+Line 1901 [depth=5]: <option value="Jacket">Jacket</option>
+Line 1902 [depth=5]: </>
+Line 1903 [depth=5]: ) : (
+Line 1904 [depth=5]: <>
+Line 1905 [depth=5]: <option value="all">Pilih Kategori</option>
+Line 1906 [depth=5]: {categories.map((c) => (
+Line 1907 [depth=5]: <option key={c.id} value={c.label}>{c.label}</option>
+Line 1908 [depth=5]: ))}
+Line 1909 [depth=5]: <option value="Promo">Promo Spesial</option>
+Line 1910 [depth=5]: </>
+Line 1911 [depth=5]: )}
+Line 1912 [depth=5]: </select>
+Line 1913 [depth=4]: </div>
+Line 1914 [depth=5]: <div className="space-y-1.5">
+Line 1915 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1916 [depth=5]: Stok Tersedia <span className="text-red-500">*</span>
+Line 1917 [depth=5]: </label>
+Line 1918 [depth=5]: <input
+Line 1919 [depth=5]: type="number"
+Line 1920 [depth=5]: placeholder="25"
+Line 1921 [depth=5]: value={stock}
+Line 1922 [depth=5]: onChange={(e) => setStock(e.target.value)}
+Line 1923 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 1924 [depth=5]: />
+Line 1925 [depth=4]: </div>
+Line 1926 [depth=3]: </div>
+Line 1927 [depth=3]: 
+Line 1928 [depth=3]: {/* Product Media Selection */}
+Line 1929 [depth=4]: <div className="space-y-4">
+Line 1930 [depth=5]: <div className="space-y-1.5">
+Line 1931 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1932 [depth=5]: Upload Gambar Utama <span className="text-red-500">*</span>
+Line 1933 [depth=5]: </label>
+Line 1934 [depth=6]: <div className="flex gap-2">
+Line 1935 [depth=6]: <ImageUploadButton
+Line 1936 [depth=6]: label="Upload Foto"
+Line 1937 [depth=6]: currentUrl={image}
+Line 1938 [depth=6]: onUploadSuccess={setImage}
+Line 1939 [depth=6]: />
+Line 1940 [depth=6]: <button
+Line 1941 [depth=6]: type="button"
+Line 1942 [depth=6]: onClick={() => openMediaModal("product")}
+Line 1943 [depth=6]: className="px-4 py-2 bg-emerald-950 text-white rounded-xl text-[10px] font-bold hover:bg-emerald-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+Line 1944 [depth=6]: >
+Line 1945 [depth=6]: <Image className="w-3.5 h-3.5" />
+Line 1946 [depth=6]: <span>GALERI</span>
+Line 1947 [depth=6]: </button>
+Line 1948 [depth=5]: </div>
+Line 1949 [depth=4]: </div>
+Line 1950 [depth=4]: 
+Line 1951 [depth=5]: <div className="space-y-1.5">
+Line 1952 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1953 [depth=5]: Upload Gambar Tambahan (Maks 6)
+Line 1954 [depth=5]: </label>
+Line 1955 [depth=6]: <div className="grid grid-cols-2 gap-2">
+Line 1956 [depth=6]: <ImageUploadButton
+Line 1957 [depth=6]: label="Upload Foto"
+Line 1958 [depth=6]: onUploadSuccess={handleAddGalleryImage}
+Line 1959 [depth=6]: />
+Line 1960 [depth=6]: <button
+Line 1961 [depth=6]: type="button"
+Line 1962 [depth=6]: onClick={() => openMediaModal("additional")}
+Line 1963 [depth=6]: className="bg-emerald-950 text-white rounded-xl flex items-center justify-center p-2 text-[10px] font-bold hover:bg-emerald-900 transition-colors cursor-pointer gap-1.5"
+Line 1964 [depth=6]: >
+Line 1965 [depth=6]: <Image className="w-3.5 h-3.5" />
+Line 1966 [depth=6]: <span>GALERI</span>
+Line 1967 [depth=6]: </button>
+Line 1968 [depth=5]: </div>
+Line 1969 [depth=5]: 
+Line 1970 [depth=5]: {additionalImages.length > 0 && (
+Line 1971 [depth=6]: <div className="grid grid-cols-3 gap-2 mt-2">
+Line 1972 [depth=6]: {additionalImages.map((img, idx) => (
+Line 1973 [depth=7]: <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
+Line 1974 [depth=7]: <img src={img} className="w-full h-full object-cover" />
+Line 1975 [depth=7]: <button
+Line 1976 [depth=7]: onClick={() => handleRemoveGalleryImage(idx)}
+Line 1977 [depth=7]: className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-100 transition-opacity shadow-md z-10 cursor-pointer"
+Line 1978 [depth=7]: >
+Line 1979 [depth=7]: <X className="w-3 h-3" />
+Line 1980 [depth=7]: </button>
+Line 1981 [depth=6]: </div>
+Line 1982 [depth=6]: ))}
+Line 1983 [depth=5]: </div>
+Line 1984 [depth=5]: )}
+Line 1985 [depth=5]: <p className="text-[9px] text-slate-400 font-medium leading-relaxed mt-1">
+Line 1986 [depth=5]: Gambar tambahan akan tampil di bagian detail produk saat pengguna melakukan scroll.
+Line 1987 [depth=5]: </p>
+Line 1988 [depth=4]: </div>
+Line 1989 [depth=3]: </div>
+Line 1990 [depth=3]: 
+Line 1991 [depth=3]: {/* Sizes Selection */}
+Line 1992 [depth=4]: <div className="space-y-1.5">
+Line 1993 [depth=4]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 1994 [depth=4]: Pilihan Ukuran Tersedia (Pisahkan dengan Koma)
+Line 1995 [depth=4]: </label>
+Line 1996 [depth=4]: <input
+Line 1997 [depth=4]: type="text"
+Line 1998 [depth=4]: placeholder="S, M, L, XL, XXL"
+Line 1999 [depth=4]: value={sizesText}
+Line 2000 [depth=4]: onChange={(e) => setSizesText(e.target.value)}
+Line 2001 [depth=4]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-semibold"
+Line 2002 [depth=4]: />
+Line 2003 [depth=4]: <p className="text-[9px] text-slate-400 font-medium">Contoh: S, M, L, XL, XXL atau 28, 30, 32. Pelanggan bisa memilih ukuran ini saat checkout.</p>
+Line 2004 [depth=3]: </div>
+Line 2005 [depth=3]: 
+Line 2006 [depth=3]: {/* Description */}
+Line 2007 [depth=4]: <div className="space-y-1.5">
+Line 2008 [depth=4]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2009 [depth=4]: Deskripsi Lengkap <span className="text-red-500">*</span>
+Line 2010 [depth=4]: </label>
+Line 2011 [depth=4]: <textarea
+Line 2012 [depth=4]: rows={4}
+Line 2013 [depth=4]: placeholder="Tuliskan spesifikasi bahan dan ukuran..."
+Line 2014 [depth=4]: value={description}
+Line 2015 [depth=4]: onChange={(e) => setDescription(e.target.value)}
+Line 2016 [depth=4]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium resize-none"
+Line 2017 [depth=4]: />
+Line 2018 [depth=3]: </div>
+Line 2019 [depth=3]: 
+Line 2020 [depth=3]: {/* Flash Sale Switch */}
+Line 2021 [depth=4]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2022 [depth=5]: <div className="flex items-center gap-2">
+Line 2023 [depth=5]: <Flame className="w-4 h-4 text-red-600 fill-red-500" />
+Line 2024 [depth=6]: <div>
+Line 2025 [depth=6]: <p className="text-[11px] font-bold text-slate-700">Aktifkan Flash Sale</p>
+Line 2026 [depth=6]: <p className="text-[9px] text-slate-400">Tampilkan di Kejar Diskon</p>
+Line 2027 [depth=5]: </div>
+Line 2028 [depth=4]: </div>
+Line 2029 [depth=4]: <input
+Line 2030 [depth=4]: type="checkbox"
+Line 2031 [depth=4]: checked={isFlashSale}
+Line 2032 [depth=4]: onChange={(e) => setIsFlashSale(e.target.checked)}
+Line 2033 [depth=4]: className="w-4 h-4 text-red-600 rounded focus:ring-red-600 border-slate-300 cursor-pointer"
+Line 2034 [depth=4]: />
+Line 2035 [depth=3]: </div>
+Line 2036 [depth=3]: 
+Line 2037 [depth=3]: {/* Promo Switch */}
+Line 2038 [depth=4]: <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2039 [depth=5]: <div className="flex items-center gap-2">
+Line 2040 [depth=5]: <Tag className="w-4 h-4 text-red-600 fill-red-500" />
+Line 2041 [depth=6]: <div>
+Line 2042 [depth=6]: <p className="text-[11px] font-bold text-slate-700">Aktifkan Promo Spesial</p>
+Line 2043 [depth=6]: <p className="text-[9px] text-slate-400">Tampilkan di Halaman Kategori Promo</p>
+Line 2044 [depth=5]: </div>
+Line 2045 [depth=4]: </div>
+Line 2046 [depth=4]: <input
+Line 2047 [depth=4]: type="checkbox"
+Line 2048 [depth=4]: checked={isPromo}
+Line 2049 [depth=4]: onChange={(e) => setIsPromo(e.target.checked)}
+Line 2050 [depth=4]: className="w-4 h-4 text-red-600 rounded focus:ring-red-600 border-slate-300 cursor-pointer"
+Line 2051 [depth=4]: />
+Line 2052 [depth=3]: </div>
+Line 2053 [depth=3]: 
+Line 2054 [depth=3]: {/* Banner Only Switch */}
+Line 2055 [depth=4]: <div className="flex flex-col gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+Line 2056 [depth=5]: <div className="flex items-center justify-between">
+Line 2057 [depth=6]: <div className="flex items-center gap-2">
+Line 2058 [depth=6]: <Layout className="w-4 h-4 text-emerald-600 fill-emerald-500" />
+Line 2059 [depth=7]: <div>
+Line 2060 [depth=7]: <p className="text-[11px] font-bold text-slate-700">Khusus Video Banner</p>
+Line 2061 [depth=7]: <p className="text-[9px] text-slate-400">Hanya tampil di tombol "Shop" video banner</p>
+Line 2062 [depth=6]: </div>
+Line 2063 [depth=5]: </div>
+Line 2064 [depth=5]: <input
+Line 2065 [depth=5]: type="checkbox"
+Line 2066 [depth=5]: checked={isBannerProduct}
+Line 2067 [depth=5]: onChange={(e) => setIsBannerProduct(e.target.checked)}
+Line 2068 [depth=5]: disabled={productTab === "banner"}
+Line 2069 [depth=5]: className={`w-4 h-4 text-emerald-600 rounded focus:ring-emerald-600 border-slate-300 ${productTab === "banner" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+Line 2070 [depth=5]: />
+Line 2071 [depth=4]: </div>
+Line 2072 [depth=4]: 
+Line 2073 [depth=4]: {isBannerProduct && (
+Line 2074 [depth=5]: <div className="space-y-1.5 pt-2 border-t border-slate-200">
+Line 2075 [depth=5]: <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2076 [depth=5]: Pilih Target Video Banner *
+Line 2077 [depth=5]: </label>
+Line 2078 [depth=5]: <select
+Line 2079 [depth=5]: value={bannerId}
+Line 2080 [depth=5]: onChange={(e) => setBannerId(e.target.value)}
+Line 2081 [depth=5]: className="w-full text-xs px-2 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-600 text-slate-700 font-semibold"
+Line 2082 [depth=5]: required={isBannerProduct}
+Line 2083 [depth=5]: >
+Line 2084 [depth=5]: <option value="">-- Pilih Banner --</option>
+Line 2085 [depth=5]: {videoBanners.map((vb) => (
+Line 2086 [depth=5]: <option key={vb.id} value={vb.id}>
+Line 2087 [depth=5]: {vb.title} ({vb.position})
+Line 2088 [depth=5]: </option>
+Line 2089 [depth=5]: ))}
+Line 2090 [depth=5]: </select>
+Line 2091 [depth=5]: {videoBanners.length === 0 && (
+Line 2092 [depth=5]: <p className="text-[8px] text-amber-600 font-medium italic">Belum ada video banner aktif. Silakan buat di tab Banners.</p>
+Line 2093 [depth=5]: )}
+Line 2094 [depth=4]: </div>
+Line 2095 [depth=4]: )}
+Line 2096 [depth=3]: </div>
+Line 2097 [depth=3]: 
+Line 2098 [depth=3]: {/* SEO & Status */}
+Line 2099 [depth=4]: <div className="space-y-4 pt-4 border-t border-slate-100">
+Line 2100 [depth=4]: <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Pengaturan Lanjutan & SEO</h4>
+Line 2101 [depth=4]: 
+Line 2102 [depth=5]: <div className="grid grid-cols-2 gap-3">
+Line 2103 [depth=6]: <div className="space-y-1.5">
+Line 2104 [depth=6]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2105 [depth=6]: Status Produk
+Line 2106 [depth=6]: </label>
+Line 2107 [depth=6]: <select
+Line 2108 [depth=6]: value={status}
+Line 2109 [depth=6]: onChange={(e) => setStatus(e.target.value as any)}
+Line 2110 [depth=6]: className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-semibold"
+Line 2111 [depth=6]: >
+Line 2112 [depth=6]: <option value="active">Aktif (Tampil)</option>
+Line 2113 [depth=6]: <option value="inactive">Non-Aktif (Sembunyi)</option>
+Line 2114 [depth=6]: </select>
+Line 2115 [depth=5]: </div>
+Line 2116 [depth=6]: <div className="space-y-1.5">
+Line 2117 [depth=6]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2118 [depth=6]: Urutan Tampilan
+Line 2119 [depth=6]: </label>
+Line 2120 [depth=6]: <input
+Line 2121 [depth=6]: type="number"
+Line 2122 [depth=6]: placeholder="0"
+Line 2123 [depth=6]: value={displayOrder}
+Line 2124 [depth=6]: onChange={(e) => setDisplayOrder(e.target.value)}
+Line 2125 [depth=6]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 2126 [depth=6]: />
+Line 2127 [depth=5]: </div>
+Line 2128 [depth=4]: </div>
+Line 2129 [depth=4]: 
+Line 2130 [depth=5]: <div className="space-y-1.5">
+Line 2131 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2132 [depth=5]: Tag (Pisahkan dengan Koma)
+Line 2133 [depth=5]: </label>
+Line 2134 [depth=5]: <input
+Line 2135 [depth=5]: type="text"
+Line 2136 [depth=5]: placeholder="dtf, sablon, kaos, custom"
+Line 2137 [depth=5]: value={tags}
+Line 2138 [depth=5]: onChange={(e) => setTags(e.target.value)}
+Line 2139 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 2140 [depth=5]: />
+Line 2141 [depth=4]: </div>
+Line 2142 [depth=4]: 
+Line 2143 [depth=5]: <div className="space-y-1.5">
+Line 2144 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2145 [depth=5]: Slug URL (Opsional)
+Line 2146 [depth=5]: </label>
+Line 2147 [depth=5]: <input
+Line 2148 [depth=5]: type="text"
+Line 2149 [depth=5]: placeholder="sablon-dtf-kaos-combed"
+Line 2150 [depth=5]: value={slug}
+Line 2151 [depth=5]: onChange={(e) => setSlug(e.target.value)}
+Line 2152 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 2153 [depth=5]: />
+Line 2154 [depth=4]: </div>
+Line 2155 [depth=4]: 
+Line 2156 [depth=5]: <div className="space-y-1.5">
+Line 2157 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2158 [depth=5]: Meta Title (SEO)
+Line 2159 [depth=5]: </label>
+Line 2160 [depth=5]: <input
+Line 2161 [depth=5]: type="text"
+Line 2162 [depth=5]: placeholder="Jasa Sablon DTF Kaos Surabaya Termurah"
+Line 2163 [depth=5]: value={metaTitle}
+Line 2164 [depth=5]: onChange={(e) => setMetaTitle(e.target.value)}
+Line 2165 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium"
+Line 2166 [depth=5]: />
+Line 2167 [depth=4]: </div>
+Line 2168 [depth=4]: 
+Line 2169 [depth=5]: <div className="space-y-1.5">
+Line 2170 [depth=5]: <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+Line 2171 [depth=5]: Meta Description (SEO)
+Line 2172 [depth=5]: </label>
+Line 2173 [depth=5]: <textarea
+Line 2174 [depth=5]: rows={2}
+Line 2175 [depth=5]: placeholder="Deskripsi untuk mesin pencari..."
+Line 2176 [depth=5]: value={metaDescription}
+Line 2177 [depth=5]: onChange={(e) => setMetaDescription(e.target.value)}
+Line 2178 [depth=5]: className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-slate-700 font-medium resize-none"
+Line 2179 [depth=5]: />
+Line 2180 [depth=4]: </div>
+Line 2181 [depth=3]: </div>
+Line 2182 [depth=3]: 
+Line 2183 [depth=3]: {/* Submit Buttons */}
+Line 2184 [depth=3]: <button
+Line 2185 [depth=3]: type="submit"
+Line 2186 [depth=3]: className={`w-full text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+Line 2187 [depth=3]: isEditing
+Line 2188 [depth=3]: ? "bg-emerald-950 hover:bg-emerald-900 shadow-slate-900/10"
+Line 2189 [depth=3]: : "bg-red-600 hover:bg-red-700 shadow-red-600/15"
+Line 2190 [depth=3]: }`}
+Line 2191 [depth=3]: >
+Line 2192 [depth=3]: <Plus className="w-4 h-4" />
+Line 2193 [depth=3]: <span>{isEditing ? "Perbarui Produk" : "Simpan Produk Baru"}</span>
+Line 2194 [depth=3]: </button>
+Line 2195 [depth=3]: </form>
+Line 2196 [depth=2]: </div>
+Line 2197 [depth=1]: </div>
+Line 2198 [depth=1]: 
+Line 2199 [depth=1]: {/* Inventory Database Table - Right side */}
+Line 2200 [depth=2]: <div className="lg:col-span-2">
+Line 2201 [depth=3]: <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+Line 2202 [depth=4]: <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+Line 2203 [depth=4]: <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
+Line 2204 [depth=4]: <Folder className="w-4 h-4 text-slate-400" />
+Line 2205 [depth=4]: <span>Gudang Produk ({productTab === "main" ? filteredAdminProducts.length : filteredBannerProducts.length} Data)</span>
+Line 2206 [depth=4]: </h3>
+Line 2207 [depth=5]: <div className="flex items-center gap-4">
+Line 2208 [depth=5]: {products.length > 0 && onDeleteProducts && (
+Line 2209 [depth=5]: <button
+Line 2210 [depth=5]: type="button"
+Line 2211 [depth=5]: onClick={() => {
+Line 2212 [depth=5]: setConfirmDeleteId(null);
+Line 2213 [depth=5]: setConfirmDeleteName("Semua Produk di Gudang");
+Line 2214 [depth=5]: setConfirmDeleteType("all-products");
+Line 2215 [depth=5]: setIsConfirmOpen(true);
+Line 2216 [depth=5]: }}
+Line 2217 [depth=5]: className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-3 border border-red-200 cursor-pointer"
+Line 2218 [depth=5]: >
+Line 2219 [depth=5]: <Trash2 className="w-3 h-3" />
+Line 2220 [depth=5]: <span>Hapus Semua</span>
+Line 2221 [depth=5]: </button>
+Line 2222 [depth=5]: )}
+Line 2223 [depth=6]: <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+Line 2224 [depth=6]: <button
+Line 2225 [depth=6]: onClick={() => setAdminProductFilter("all")}
+Line 2226 [depth=6]: className={`px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${adminProductFilter === "all" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+Line 2227 [depth=6]: >
+Line 2228 [depth=6]: Semua
+Line 2229 [depth=6]: </button>
+Line 2230 [depth=6]: <button
+Line 2231 [depth=6]: onClick={() => setAdminProductFilter("fashion")}
+Line 2232 [depth=6]: className={`px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${adminProductFilter === "fashion" ? "bg-blue-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+Line 2233 [depth=6]: >
+Line 2234 [depth=6]: Fashion
+Line 2235 [depth=6]: </button>
+Line 2236 [depth=6]: <button
+Line 2237 [depth=6]: onClick={() => setAdminProductFilter("dtf")}
+Line 2238 [depth=6]: className={`px-3 py-1 text-[9px] font-black uppercase tracking-tighter rounded-md transition-all ${adminProductFilter === "dtf" ? "bg-purple-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+Line 2239 [depth=6]: >
+Line 2240 [depth=6]: Sablon DTF
+Line 2241 [depth=6]: </button>
+Line 2242 [depth=5]: </div>
+Line 2243 [depth=5]: <button
+Line 2244 [depth=5]: onClick={onReloadProducts}
+Line 2245 [depth=5]: className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide px-3 cursor-pointer"
+Line 2246 [depth=5]: >
+Line 2247 [depth=5]: <RefreshCw className="w-3 h-3" />
+Line 2248 [depth=5]: <span>Refresh</span>
+Line 2249 [depth=5]: </button>
+Line 2250 [depth=4]: </div>
+Line 2251 [depth=3]: </div>
+Line 2252 [depth=3]: 
+Line 2253 [depth=4]: <div className="space-y-6">
+Line 2254 [depth=4]: {(productTab === "main" ? productChunks : bannerProductChunks).map((chunk, chunkIdx) => (
+Line 2255 [depth=5]: <div key={chunkIdx} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+Line 2256 [depth=6]: <div className="bg-slate-50 px-6 py-4 flex items-center justify-between border-b border-slate-200">
+Line 2257 [depth=7]: <div className="flex items-center gap-3">
+Line 2258 [depth=8]: <div className="w-8 h-8 bg-red-600 rounded-xl flex items-center justify-center text-white text-[10px] font-black">
+Line 2259 [depth=8]: {chunkIdx + 1}
+Line 2260 [depth=7]: </div>
+Line 2261 [depth=8]: <div>
+Line 2262 [depth=8]: <h3 className="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider">Gudang #{chunkIdx + 1}</h3>
+Line 2263 [depth=8]: <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{chunk.length} Produk Tersimpan</p>
+Line 2264 [depth=7]: </div>
+Line 2265 [depth=6]: </div>
+Line 2266 [depth=5]: </div>
+Line 2267 [depth=5]: 
+Line 2268 [depth=6]: <div className="p-4 md:p-6">
+Line 2269 [depth=7]: <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+Line 2270 [depth=7]: {chunk.map((p) => (
+Line 2271 [depth=7]: <div
+Line 2272 [depth=7]: key={p.id}
+Line 2273 [depth=7]: className="relative group bg-white rounded-2xl border border-slate-150 p-2.5 transition-all hover:shadow-md hover:border-red-200 overflow-hidden cursor-pointer"
+Line 2274 [depth=7]: onClick={() => onViewDetail && onViewDetail(p)}
+Line 2275 [depth=7]: >
+Line 2276 [depth=8]: <div className="aspect-[3/4] rounded-xl overflow-hidden mb-2.5 border border-slate-100 bg-slate-50">
+Line 2277 [depth=8]: <img
+Line 2278 [depth=8]: src={p.image}
+Line 2279 [depth=8]: alt={p.name}
+Line 2280 [depth=8]: className="w-full h-full object-cover transition-transform group-hover:scale-105"
+Line 2281 [depth=8]: referrerPolicy="no-referrer"
+Line 2282 [depth=8]: />
+Line 2283 [depth=9]: <div className="absolute top-2 left-2 flex flex-col gap-1">
+Line 2284 [depth=9]: {p.productType === "dtf" ? (
+Line 2285 [depth=9]: <span className="px-1.5 py-0.5 bg-purple-600 text-[8px] font-black text-white rounded uppercase tracking-tighter shadow-sm border border-purple-400">DTF</span>
+Line 2286 [depth=9]: ) : (
+Line 2287 [depth=9]: <span className="px-1.5 py-0.5 bg-blue-600 text-[8px] font-black text-white rounded uppercase tracking-tighter shadow-sm border border-blue-400">Fashion</span>
+Line 2288 [depth=9]: )}
+Line 2289 [depth=8]: </div>
+Line 2290 [depth=7]: </div>
+Line 2291 [depth=7]: 
+Line 2292 [depth=8]: <div className="space-y-1.5 mb-2">
+Line 2293 [depth=8]: <p className="text-[10px] font-extrabold text-slate-800 truncate leading-tight" title={p.name}>{p.name}</p>
+Line 2294 [depth=9]: <div className="flex items-center justify-between">
+Line 2295 [depth=9]: <p className="text-[9px] text-red-600 font-black">Rp {p.price.toLocaleString("id-ID")}</p>
+Line 2296 [depth=9]: <span className="text-[8px] font-black text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">STOK: {p.stock}</span>
+Line 2297 [depth=8]: </div>
+Line 2298 [depth=7]: </div>
+Line 2299 [depth=7]: 
+Line 2300 [depth=8]: <div className="flex gap-1.5 pt-2 border-t border-slate-100">
+Line 2301 [depth=8]: <button
+Line 2302 [depth=8]: type="button"
+Line 2303 [depth=8]: onClick={(e) => {
+Line 2304 [depth=8]: e.stopPropagation();
+Line 2305 [depth=8]: handleEditClick(p);
+Line 2306 [depth=8]: }}
+Line 2307 [depth=8]: className="flex-1 py-1.5 bg-slate-100 text-slate-600 hover:bg-emerald-600 hover:text-white text-[8px] font-black rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer"
+Line 2308 [depth=8]: >
+Line 2309 [depth=8]: <Edit className="w-2.5 h-2.5" />
+Line 2310 [depth=8]: EDIT
+Line 2311 [depth=8]: </button>
+Line 2312 [depth=8]: <button
+Line 2313 [depth=8]: type="button"
+Line 2314 [depth=8]: onClick={(e) => {
+Line 2315 [depth=8]: e.stopPropagation();
+Line 2316 [depth=8]: handleDeleteClick(p.id, p.name);
+Line 2317 [depth=8]: }}
+Line 2318 [depth=8]: className="flex-1 py-1.5 bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white text-[8px] font-black rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer"
+Line 2319 [depth=8]: >
+Line 2320 [depth=8]: <Trash2 className="w-2.5 h-2.5" />
+Line 2321 [depth=8]: HAPUS
+Line 2322 [depth=8]: </button>
+Line 2323 [depth=7]: </div>
+Line 2324 [depth=6]: </div>
+Line 2325 [depth=6]: ))}
+Line 2326 [depth=5]: </div>
+Line 2327 [depth=4]: </div>
+Line 2328 [depth=3]: </div>
+Line 2329 [depth=3]: ))}
+Line 2330 [depth=3]: 
+Line 2331 [depth=3]: {products.length === 0 && (
+Line 2332 [depth=4]: <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-16 text-center">
+Line 2333 [depth=5]: <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100">
+Line 2334 [depth=5]: <Package className="w-6 h-6 text-slate-300" />
+Line 2335 [depth=4]: </div>
+Line 2336 [depth=4]: <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Gudang Kosong</p>
+Line 2337 [depth=4]: <p className="text-[10px] text-slate-300 mt-1 font-bold">Silahkan upload produk baru di panel samping.</p>
+Line 2338 [depth=3]: </div>
+Line 2339 [depth=3]: )}
+Line 2340 [depth=2]: </div>
+Line 2341 [depth=1]: </div>
+Line 2342 [depth=0]: </div>
+Line 2343 [depth=-1]: </div>
+Line 2344 [depth=-2]: </div>
+Line 2345 [depth=-2]: ) : adminTab === "banners" ? (

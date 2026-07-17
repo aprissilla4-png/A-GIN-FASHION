@@ -12,7 +12,10 @@ export default function FlashSale({ products, onAddToCart, onViewDetail }: Flash
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 12, seconds: 21 });
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
-  const flashProducts = products.filter((p) => p.isFlashSale);
+  const flashProducts = products.filter((p) => {
+    const isFashion = p.productType === "fashion" || !p.productType;
+    return p.isFlashSale && isFashion && !p.isBannerProduct;
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -55,9 +58,9 @@ export default function FlashSale({ products, onAddToCart, onViewDetail }: Flash
         </div>
         
         {/* Sleek countdown timer box */}
-        <div className="flex items-center gap-2 bg-[#111111] text-[#F8F7F4] font-mono text-[0.85rem] uppercase tracking-widest px-4 py-2 rounded-full">
+        <div className="flex items-center gap-2 bg-[#D46A7A] text-[#FAF1EE] font-sans text-[0.75rem] font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-md">
           <span>ENDS IN:</span>
-          <span className="font-bold text-[#A68966]">
+          <span className="font-black text-white">
             {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
           </span>
         </div>
@@ -69,10 +72,10 @@ export default function FlashSale({ products, onAddToCart, onViewDetail }: Flash
           const isFavorited = !!favorites[p.id];
 
           return (
-            <div key={p.id} className="group cursor-pointer flex flex-col justify-between" onClick={() => onViewDetail(p)}>
+            <div key={p.id} className="group cursor-pointer flex flex-col justify-between bg-white/90 hover:bg-white backdrop-blur-md rounded-[2.2rem] p-5 shadow-lg border border-white/25 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" onClick={() => onViewDetail(p)}>
               <div className="space-y-4">
                 {/* Image Wrapper */}
-                <div className="w-full aspect-[3/4] overflow-hidden bg-[#FAF7F2] rounded-3xl relative">
+                <div className="w-full aspect-[3/4] overflow-hidden bg-[#FAF1EE] rounded-3xl relative">
                   <img
                     src={p.image}
                     alt={p.name}
@@ -95,24 +98,24 @@ export default function FlashSale({ products, onAddToCart, onViewDetail }: Flash
                   </button>
 
                   {/* Promo Discount Tag */}
-                  <div className="absolute top-4 left-4 bg-red-600 text-[#F8F7F4] font-mono text-[0.75rem] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  <div className="absolute top-4 left-4 bg-[#D46A7A] text-[#FAF1EE] font-sans text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                     Sale -30%
                   </div>
                 </div>
 
                 {/* Details Block */}
                 <div className="space-y-1">
-                  <h4 className="font-sans text-[1.05rem] text-[#111111] font-normal leading-tight tracking-tight group-hover:text-[#A68966] transition-colors truncate">
+                  <h4 className="font-sans text-[1.05rem] text-[#2F2022] font-normal leading-tight tracking-tight group-hover:text-[#D46A7A] transition-colors truncate">
                     {p.name}
                   </h4>
                   
                   {/* Rating Section */}
                   <div className="flex items-center gap-1.5 py-0.5">
-                    <span className="text-[#C19A6B] text-[0.8rem] tracking-tight">{rating.starString}</span>
+                    <span className="text-[#D46A7A] text-[0.8rem] tracking-tight">{rating.starString}</span>
                     <span className="text-[#1B1B1B]/40 font-mono text-[0.75rem]">({rating.count})</span>
                   </div>
 
-                  <p className="font-mono text-[1rem] text-[#111111] font-semibold flex items-center gap-2">
+                  <p className="font-mono text-[1rem] text-[#2F2022] font-semibold flex items-center gap-2">
                     <span>Rp {p.price.toLocaleString("id-ID")}</span>
                     {p.originalPrice && (
                       <span className="opacity-30 line-through font-normal text-[0.85rem]">
@@ -126,7 +129,7 @@ export default function FlashSale({ products, onAddToCart, onViewDetail }: Flash
               {/* Action Button */}
               <button
                 onClick={(e) => { e.stopPropagation(); onAddToCart(p); }}
-                className="mt-4 font-mono text-[0.8rem] uppercase tracking-[0.15em] bg-[#111111] text-white rounded-full py-3 hover:bg-[#111111]/80 transition-colors w-full cursor-pointer font-bold"
+                className="mt-4 font-sans text-[0.75rem] uppercase tracking-[0.18em] bg-[#D46A7A] hover:bg-[#C55263] text-white rounded-full py-3.5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] w-full cursor-pointer font-bold shadow-md shadow-[#D46A7A]/10"
               >
                 Add to Bag
               </button>

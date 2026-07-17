@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 interface InfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  tab: "contact" | "shipping" | "returns" | "size-guide" | "lookbook";
+  tab: "contact" | "shipping" | "returns" | "size-guide";
 }
 
 export default function InfoModal({ isOpen, onClose, tab }: InfoModalProps) {
@@ -283,34 +283,6 @@ export default function InfoModal({ isOpen, onClose, tab }: InfoModalProps) {
             <p className="text-[0.65rem] italic text-[#111111]/50 leading-relaxed">
               *Toleransi jahitan sekitar 1-2 cm wajar terjadi pada proses pemotongan manual kain garmen modern.
             </p>
-          </div>
-        );
-
-      case "lookbook":
-        return (
-          <div className="space-y-6">
-            <div className="border-b border-black/10 pb-4">
-              <span className="font-mono text-[0.65rem] tracking-[0.2em] text-[#A68966] uppercase font-bold">Fashion Showcase</span>
-              <h3 className="font-serif text-2xl font-light text-[#111111] mt-1">A-GIN Studio Lookbook</h3>
-            </div>
-            
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-black/10 shadow-lg">
-              <iframe 
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ"
-                title="A-GIN Fashion Lookbook Video"
-                referrerPolicy="no-referrer"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                className="absolute inset-0 w-full h-full border-0"
-                allowFullScreen
-              ></iframe>
-            </div>
-
-            <div className="space-y-2 text-center max-w-md mx-auto pt-2">
-              <p className="font-mono text-[0.65rem] tracking-[0.25em] text-[#A68966] uppercase font-semibold">Volume IV / Infinite Serenity</p>
-              <p className="text-[0.75rem] text-[#111111]/70 font-light leading-relaxed">
-                Koleksi editorial premium yang menggabungkan kesederhanaan minimalis dengan detail batik eksotis bernuansa modern, direkam eksklusif di Jakarta 2026.
-              </p>
-            </div>
           </div>
         );
 

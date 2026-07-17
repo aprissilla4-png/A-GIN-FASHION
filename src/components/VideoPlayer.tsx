@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 
 interface VideoPlayerProps {
   src: string;
@@ -6,30 +6,79 @@ interface VideoPlayerProps {
   onClick?: () => void;
 }
 
+export function getYoutubeId(url: string): string | null {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+  return match ? match[1] : null;
+}
+
 export default function VideoPlayer({ src, className, onClick }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ytId = getYoutubeId(src);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video || ytId) return; // Skip observer for youtube thumbnails
+
+    let isPlaying = false;
+    let playPromise: Promise<void> | null = null;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && src) {
-            videoRef.current?.play().catch(e => console.log("Autoplay handled/deferred:", e.message));
+            if (!isPlaying) {
+              isPlaying = true;
+              playPromise = video.play();
+              playPromise.catch((err) => {
+                console.log("Autoplay handled/deferred:", err.message);
+                isPlaying = false;
+              });
+            }
           } else {
-            videoRef.current?.pause();
+            if (isPlaying) {
+              if (playPromise) {
+                playPromise
+                  .then(() => {
+                    video.pause();
+                    isPlaying = false;
+                  })
+                  .catch(() => {
+                    video.pause();
+                    isPlaying = false;
+                  });
+              } else {
+                video.pause();
+                isPlaying = false;
+              }
+            } else {
+              video.pause();
+            }
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.2 }
     );
 
-    const currentVideo = videoRef.current;
-    if (currentVideo) observer.observe(currentVideo);
+    observer.observe(video);
 
     return () => {
-      if (currentVideo) observer.unobserve(currentVideo);
+      observer.unobserve(video);
+      if (video) {
+        video.pause();
+      }
     };
-  }, [src]);
+  }, [src, ytId]);
+
+  if (ytId) {
+    return (
+      <img 
+        src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`} 
+        className={className} 
+        onClick={onClick} 
+        alt="Video Thumbnail"
+      />
+    );
+  }
 
   return (
     <video

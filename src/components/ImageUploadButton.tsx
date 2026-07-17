@@ -5,9 +5,23 @@ interface ImageUploadButtonProps {
   onUploadSuccess: (url: string) => void;
   currentUrl?: string;
   label?: string;
+  isLogo?: boolean;
+  removeBg?: boolean;
+  bgType?: "white" | "black" | "white_to_dark" | "black_to_dark" | "none";
+  cropBottom?: boolean;
+  multiple?: boolean;
 }
 
-export default function ImageUploadButton({ onUploadSuccess, currentUrl, label = "Pilih Gambar" }: ImageUploadButtonProps) {
+export default function ImageUploadButton({ 
+  onUploadSuccess, 
+  currentUrl, 
+  label = "Pilih Gambar",
+  isLogo = false,
+  removeBg = false,
+  bgType = "none",
+  cropBottom = false,
+  multiple = false
+}: ImageUploadButtonProps) {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -17,49 +31,109 @@ export default function ImageUploadButton({ onUploadSuccess, currentUrl, label =
     setPreviewUrl(null);
   }, [currentUrl]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadFile = async (file: File) => {
+    // Resize image on client side before uploading to prevent payload too large errors
+    const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
 
-    setUploading(true);
-    setPreviewUrl(URL.createObjectURL(file));
-    try {
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-      });
-      reader.readAsDataURL(file);
-      const base64Data = await base64Promise;
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            if (isLogo || file.type === "image/png") {
+              resolve(canvas.toDataURL("image/png"));
+            } else {
+              resolve(canvas.toDataURL("image/jpeg", 0.75));
+            }
+          };
+          img.onerror = reject;
+          img.src = event.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 
-      console.log("Uploading file to server:", file.name);
-      const res = await fetch("/api/upload", {
+    console.log("Uploading file to server:", file.name);
+    
+    const uploadUrl = isLogo ? "/api/upload-logo" : "/api/upload";
+    const payload: any = { image: base64Data, name: file.name };
+    
+    if (isLogo) {
+        payload.removeBg = removeBg;
+        payload.bgType = bgType;
+        payload.cropBottom = cropBottom;
+    }
+
+    const res = await fetch(uploadUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64Data, name: file.name })
-      });
+        body: JSON.stringify(payload)
+    });
 
-      if (!res.ok) {
+    if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || "Gagal mengunggah gambar ke server.");
-      }
+    }
 
-      const data = await res.json();
-      console.log("Upload success, url:", data.url);
-      onUploadSuccess(data.url);
+    const data = await res.json();
+    console.log("Upload success, url:", data.url);
+    return data.url;
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    
+    try {
+      if (!multiple) {
+          const file = files[0];
+          setPreviewUrl(URL.createObjectURL(file));
+          const url = await uploadFile(file);
+          onUploadSuccess(url);
+      } else {
+          for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const url = await uploadFile(file);
+              onUploadSuccess(url);
+          }
+      }
     } catch (error: any) {
       console.error("Error uploading image:", error);
       alert("Gagal mengunggah: " + error.message);
       setPreviewUrl(null);
     } finally {
       setUploading(false);
+      if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+      }
     }
   };
 
   return (
     <div className="space-y-2">
-      {(previewUrl || currentUrl) && (
+      {!multiple && (previewUrl || currentUrl) && (
         <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 group">
           <img src={previewUrl || currentUrl} alt="Preview" className="w-full h-full object-cover" />
           <button
@@ -89,7 +163,8 @@ export default function ImageUploadButton({ onUploadSuccess, currentUrl, label =
         {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
         {uploading ? "Mengunggah..." : label}
       </button>
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+      <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} multiple={multiple} className="hidden" />
     </div>
   );
 }
+
