@@ -366,6 +366,57 @@ export default function App() {
     );
   };
 
+  const handleCheckout = async (checkoutData: {
+    cart: CartItem[];
+    total: number;
+    address: string;
+    courier: string;
+    shippingCost: number;
+    customerName: string;
+    customerPhone: string;
+    gateway: "DOKU" | "MIDTRANS";
+  }) => {
+    try {
+      const productName = checkoutData.cart.length === 1 
+        ? checkoutData.cart[0].product.name 
+        : `${checkoutData.cart.length} Produk (Multiple Items)`;
+        
+      const productId = checkoutData.cart.length > 0 ? checkoutData.cart[0].product.id : "cart";
+      const productImage = checkoutData.cart.length > 0 ? checkoutData.cart[0].product.image : "";
+      const size = checkoutData.cart.length === 1 ? checkoutData.cart[0].selectedSize : "Mixed";
+      
+      const response = await fetch('/api/payments/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: user?.id || null,
+          productId,
+          productName,
+          productImage,
+          size,
+          price: checkoutData.total,
+          quantity: 1,
+          customerName: checkoutData.customerName.trim() || "Guest User",
+          customerPhone: checkoutData.customerPhone.trim() || "081234567890",
+          address: checkoutData.address || "Alamat Pengiriman Default",
+          courier: checkoutData.courier || "JNE",
+          shippingCost: checkoutData.shippingCost || 0,
+          totalAmount: checkoutData.total,
+          paymentMethod: checkoutData.gateway === "MIDTRANS" ? "MIDTRANS" : "DOKU_CHECKOUT"
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal mendapatkan URL pembayaran.");
+      }
+      return data;
+    } catch (err: any) {
+      console.error("handleCheckout error:", err);
+      throw err;
+    }
+  };
+
   // Click Action Callback Handlers for Interactive Buttons
   const scrollToCatalog = () => {
     setTimeout(() => {
@@ -925,6 +976,7 @@ export default function App() {
               onUpdateQuantity={handleUpdateCartQuantity}
               onUpdateSize={handleUpdateCartSize}
               onRemoveItem={handleRemoveCartItem}
+              onCheckout={handleCheckout}
             />
           </motion.div>
         )}

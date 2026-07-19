@@ -13,6 +13,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (productId: string, quantity: number, size: string) => void;
   onUpdateSize: (productId: string, oldSize: string, newSize: string) => void;
   onRemoveItem: (productId: string, size: string) => void;
+  onCheckout?: (params: any) => Promise<any>;
 }
 
 export default function CartDrawer({
@@ -22,7 +23,8 @@ export default function CartDrawer({
   user,
   onUpdateQuantity,
   onUpdateSize,
-  onRemoveItem
+  onRemoveItem,
+  onCheckout
 }: CartDrawerProps) {
   if (!isOpen) return null;
 
@@ -520,7 +522,7 @@ export default function CartDrawer({
             <button
               id="checkout-wa-btn"
               onClick={handleCheckoutWhatsApp}
-              disabled={!destinationAddress || !customerName.trim() || !customerPhone.trim() || shippingCost === null || shippingCost === 0}
+              disabled={!destinationAddress || !customerName.trim() || !customerPhone.trim() || shippingCost === null}
               className="w-full bg-gradient-to-tr from-red-600 to-rose-600 hover:opacity-95 active:scale-[0.98] text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-lg shadow-red-600/15 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
             >
               <Send className="w-4 h-4 fill-white" />
@@ -535,6 +537,7 @@ export default function CartDrawer({
               shippingCost={shippingCost} 
               customerName={customerName}
               customerPhone={customerPhone}
+              onCheckout={onCheckout}
             />
           </div>
         )}

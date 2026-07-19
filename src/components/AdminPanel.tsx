@@ -237,6 +237,11 @@ export default function AdminPanel({
   const [brandOriginCityId, setBrandOriginCityId] = useState("444");
   const [brandOriginCityName, setBrandOriginCityName] = useState("Surabaya");
   const [brandOriginPostalCode, setBrandOriginPostalCode] = useState("60181");
+  const [midtransServerKey, setMidtransServerKey] = useState("");
+  const [midtransClientKey, setMidtransClientKey] = useState("");
+  const [midtransIsProduction, setMidtransIsProduction] = useState(false);
+  const [testingMidtrans, setTestingMidtrans] = useState(false);
+  const [midtransTestResult, setMidtransTestResult] = useState<{ success: boolean; message: string; redirectUrl?: string } | null>(null);
   const [isSavingBranding, setIsSavingBranding] = useState(false);
   const [removeLogoBg, setRemoveLogoBg] = useState(false);
   const [logoBgType, setLogoBgType] = useState<"white" | "black" | "white_to_dark" | "black_to_dark" | "none">("white");
@@ -581,6 +586,9 @@ export default function AdminPanel({
         setBrandOriginCityId(data.originCityId || "444");
         setBrandOriginCityName(data.originCityName || "Surabaya");
         setBrandOriginPostalCode(data.originPostalCode || "60181");
+        setMidtransServerKey(data.midtransServerKey || "");
+        setMidtransClientKey(data.midtransClientKey || "");
+        setMidtransIsProduction(!!data.midtransIsProduction);
       }
 
       const resCustom = await fetch("/api/settings/custom-logos");
@@ -606,7 +614,10 @@ export default function AdminPanel({
           logoUrl: brandLogoUrl,
           originCityId: brandOriginCityId,
           originCityName: brandOriginCityName,
-          originPostalCode: brandOriginPostalCode
+          originPostalCode: brandOriginPostalCode,
+          midtransServerKey,
+          midtransClientKey,
+          midtransIsProduction
         })
       });
       if (res.ok) {
@@ -620,6 +631,49 @@ export default function AdminPanel({
       setMsg({ text: "Koneksi ke backend gagal.", type: "error" });
     } finally {
       setIsSavingBranding(false);
+    }
+  };
+
+  const handleTestMidtrans = async () => {
+    if (!midtransServerKey.trim()) {
+      setMidtransTestResult({
+        success: false,
+        message: "Midtrans Server Key tidak boleh kosong. Harap masukkan Sandbox Server Key Anda."
+      });
+      return;
+    }
+    setTestingMidtrans(true);
+    setMidtransTestResult(null);
+    try {
+      const res = await fetch("/api/payments/midtrans-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serverKey: midtransServerKey,
+          clientKey: midtransClientKey,
+          isProduction: midtransIsProduction
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMidtransTestResult({
+          success: true,
+          message: data.message,
+          redirectUrl: data.redirectUrl
+        });
+      } else {
+        setMidtransTestResult({
+          success: false,
+          message: data.message || "Gagal menghubungkan ke Midtrans Sandbox."
+        });
+      }
+    } catch (err: any) {
+      setMidtransTestResult({
+        success: false,
+        message: `Gagal uji koneksi: ${err.message || 'Kesalahan jaringan'}`
+      });
+    } finally {
+      setTestingMidtrans(false);
     }
   };
 
@@ -4535,6 +4589,127 @@ export default function AdminPanel({
 
               <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100/80 text-[10px] text-emerald-800 font-medium leading-relaxed">
                 💡 <strong>Konektivitas Biteship Aktif:</strong> Saat ini sistem dikonfigurasikan menggunakan <strong>Biteship API</strong> untuk perhitungan tarif pengiriman dan pelacakan resi secara real-time. Pastikan Kode Pos Asal diisi dengan benar agar pencarian rute kurir domestik akurat.
+              </div>
+            </div>
+
+            {/* Midtrans Sandbox Gateway Configuration */}
+            <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/60 space-y-4">
+              <div>
+                <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
+                  <Coins className="w-4 h-4 text-emerald-800" />
+                  <span>💳 Pengaturan Pembayaran Gateway Midtrans</span>
+                </h4>
+                <p className="text-[10px] text-slate-400 font-medium mt-0.5 leading-relaxed">
+                  Konfigurasikan kunci API Midtrans Sandbox atau Production Anda untuk mengaktifkan pembayaran real-time menggunakan Midtrans Snap Checkout.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                    Midtrans Server Key
+                  </label>
+                  <input
+                    type="password"
+                    value={midtransServerKey}
+                    onChange={(e) => setMidtransServerKey(e.target.value)}
+                    placeholder="Contoh: SB-Mid-server-..."
+                    className="w-full text-xs px-3.5 py-2 border border-slate-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 text-slate-700 font-mono"
+                  />
+                  <p className="text-[9px] text-slate-400">
+                    Kunci server rahasia yang digunakan untuk otentikasi transaksi pembayaran (diawali dengan <strong>SB-</strong> untuk Sandbox).
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                    Midtrans Client Key
+                  </label>
+                  <input
+                    type="text"
+                    value={midtransClientKey}
+                    onChange={(e) => setMidtransClientKey(e.target.value)}
+                    placeholder="Contoh: SB-Mid-client-..."
+                    className="w-full text-xs px-3.5 py-2 border border-slate-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 text-slate-700 font-mono"
+                  />
+                  <p className="text-[9px] text-slate-400">
+                    Kunci klien publik yang aman untuk digunakan di frontend browser Anda.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 pt-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="midtransIsProduction"
+                    checked={midtransIsProduction}
+                    onChange={(e) => setMidtransIsProduction(e.target.checked)}
+                    className="rounded border-slate-300 text-emerald-900 focus:ring-emerald-900/20"
+                  />
+                  <label htmlFor="midtransIsProduction" className="text-[10px] font-extrabold text-slate-600 cursor-pointer select-none uppercase tracking-wide">
+                    ⚠️ AKTIFKAN MODE PRODUCTION (REAL PAYMENT)
+                  </label>
+                </div>
+              </div>
+
+              {/* Real-time Connection Test Block */}
+              <div className="border-t border-slate-200/60 pt-4 mt-2">
+                <div className="flex flex-wrap gap-2 items-center justify-between">
+                  <div>
+                    <h5 className="text-[11px] font-extrabold text-slate-700">Uji Koneksi Sandbox Real-Time</h5>
+                    <p className="text-[9px] text-slate-400">Pastikan Server Key valid dengan membuat transaksi simulasi instan di server Midtrans.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={testingMidtrans}
+                    onClick={handleTestMidtrans}
+                    className="px-4 py-2 bg-emerald-950 hover:bg-emerald-900 text-white rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300"
+                  >
+                    {testingMidtrans ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>MENGHUBUNGI MIDTRANS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3" />
+                        <span>UJI KONEKSI SEKARANG</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {midtransTestResult && (
+                  <div className={`mt-3 p-3 rounded-lg border text-[10px] font-semibold leading-relaxed animate-fade-in ${
+                    midtransTestResult.success 
+                      ? "bg-emerald-50 border-emerald-100 text-emerald-800" 
+                      : "bg-red-50 border-red-100 text-red-800"
+                  }`}>
+                    {midtransTestResult.success ? (
+                      <div className="space-y-2">
+                        <p>✅ <strong>Koneksi Sukses:</strong> {midtransTestResult.message}</p>
+                        {midtransTestResult.redirectUrl && (
+                          <div className="bg-white p-2.5 rounded-md border border-emerald-200/60 flex items-center justify-between gap-4 mt-1.5 shadow-sm">
+                            <span className="text-[9px] text-slate-500 font-mono break-all leading-normal">
+                              Token Uji: <strong>{midtransTestResult.redirectUrl.split('/').pop()}</strong>
+                            </span>
+                            <a
+                              href={midtransTestResult.redirectUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 bg-red-600 text-white font-extrabold rounded-md hover:bg-red-700 transition-colors text-[9px] shrink-0"
+                            >
+                              Buka Snap Sandbox &rarr;
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p>❌ <strong>Uji Koneksi Gagal:</strong> {midtransTestResult.message}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

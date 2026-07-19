@@ -15,6 +15,7 @@ import { adminAuth, adminDb } from "./src/lib/firebase-admin.ts";
 import { db as clientDb } from "./src/lib/firebase.ts";
 import { collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "firebase/firestore";
 import { createServer as createViteServer } from "vite";
+import { generateMidtransSnapToken } from "./src/lib/midtrans.ts";
 
 const PORT = 3000;
 console.log("SQL_HOST:", process.env.SQL_HOST);
@@ -112,6 +113,9 @@ interface LogoSettings {
   originCityId?: string;
   originCityName?: string;
   originPostalCode?: string;
+  midtransServerKey?: string;
+  midtransClientKey?: string;
+  midtransIsProduction?: boolean;
 }
 
 interface DtfSettings {
@@ -2279,7 +2283,10 @@ async function startServer() {
         logoUrl: "/uploads/a_gin_logo_transparent_black_v4.png",
         originCityId: "444",
         originCityName: "Surabaya",
-        originPostalCode: "60181"
+        originPostalCode: "60181",
+        midtransServerKey: "",
+        midtransClientKey: "",
+        midtransIsProduction: false
       });
     } catch (err: any) {
       console.error("Get logo settings error:", err);
@@ -2290,7 +2297,10 @@ async function startServer() {
         logoUrl: "/uploads/a_gin_logo_transparent_black_v4.png",
         originCityId: "444",
         originCityName: "Surabaya",
-        originPostalCode: "60181"
+        originPostalCode: "60181",
+        midtransServerKey: "",
+        midtransClientKey: "",
+        midtransIsProduction: false
       });
     }
   });
@@ -2298,7 +2308,7 @@ async function startServer() {
   // API - Settings - LOGO - PUT
   app.put("/api/settings/logo", async (req, res) => {
     try {
-      const { text, highlightText, slogan, logoUrl, originCityId, originCityName, originPostalCode } = req.body;
+      const { text, highlightText, slogan, logoUrl, originCityId, originCityName, originPostalCode, midtransServerKey, midtransClientKey, midtransIsProduction } = req.body;
       const dbData = await loadDatabase();
       dbData.logoSettings = {
         text: text || "A-GIN",
@@ -2307,7 +2317,10 @@ async function startServer() {
         logoUrl: logoUrl || "",
         originCityId: originCityId || "444",
         originCityName: originCityName || "Surabaya",
-        originPostalCode: originPostalCode || "60181"
+        originPostalCode: originPostalCode || "60181",
+        midtransServerKey: midtransServerKey || "",
+        midtransClientKey: midtransClientKey || "",
+        midtransIsProduction: midtransIsProduction !== undefined ? midtransIsProduction : false
       };
       await saveDatabase(dbData);
       res.json(dbData.logoSettings);
@@ -3984,13 +3997,12 @@ async function startServer() {
     };
 
     // If Midtrans API key is configured, execute real charge!
-    const midtransServerKey = process.env.MIDTRANS_SERVER_KEY;
+    const midtransServerKey = dbData.logoSettings?.midtransServerKey || process.env.MIDTRANS_SERVER_KEY;
     if ((paymentMethod === "MIDTRANS" || paymentMethod === "MIDTRANS_SNAP") && midtransServerKey) {
       try {
-        const isProd = process.env.MIDTRANS_IS_PRODUCTION === "true" || !midtransServerKey.startsWith("SB-");
-        const midtransUrl = isProd
-          ? "https://app.midtrans.com/snap/v1/transactions"
-          : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+        const isProd = dbData.logoSettings?.midtransIsProduction !== undefined 
+          ? dbData.logoSettings.midtransIsProduction 
+          : (process.env.MIDTRANS_IS_PRODUCTION === "true" || !midtransServerKey.startsWith("SB-"));
 
         // Item details breakdown for premium look
         const itemDetails = [
@@ -4019,31 +4031,18 @@ async function startServer() {
           });
         }
 
-        const authHeader = "Basic " + Buffer.from(midtransServerKey + ":").toString("base64");
-
-        const response = await fetch(midtransUrl, {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": authHeader
+        // Generate token using modular midtrans library
+        const midtransResult = await generateMidtransSnapToken(midtransServerKey, isProd, {
+          orderId,
+          grossAmount: Number(totalAmount),
+          customerDetails: {
+            first_name: customerName,
+            phone: customerPhone
           },
-          body: JSON.stringify({
-            transaction_details: {
-              order_id: orderId,
-              gross_amount: Number(totalAmount)
-            },
-            item_details: itemDetails,
-            customer_details: {
-              first_name: customerName,
-              phone: customerPhone
-            }
-          })
+          itemDetails: itemDetails
         });
 
-        const midtransResult = await response.json();
-
-        if (response.ok && midtransResult && midtransResult.redirect_url) {
+        if (midtransResult && midtransResult.redirectUrl) {
           newOrder.paymentStatus = "pending";
           dbData.orders.push(newOrder);
           await saveDatabase(dbData);
@@ -4051,7 +4050,7 @@ async function startServer() {
           return res.json({
             success: true,
             orderId,
-            checkoutUrl: midtransResult.redirect_url,
+            checkoutUrl: midtransResult.redirectUrl,
             instructions: "Silahkan klik tombol 'Bayar dengan Midtrans' untuk menyelesaikan pembayaran.",
             totalAmount: Number(totalAmount),
             waybill: null,
@@ -4059,12 +4058,12 @@ async function startServer() {
             isRealMidtrans: true
           });
         } else {
-          console.error("Midtrans API Error:", midtransResult);
-          return res.status(400).json({ error: `Midtrans API Error: ${midtransResult?.error_messages?.join(', ') || 'Gagal memproses pembayaran Midtrans'}` });
+          console.error("Midtrans Helper Error: Missing redirect URL", midtransResult);
+          return res.status(400).json({ error: 'Gagal mendapatkan URL pembayaran dari Midtrans.' });
         }
       } catch (midtransError: any) {
-        console.error("Midtrans connection error:", midtransError);
-        return res.status(500).json({ error: "Gagal terhubung ke server Midtrans." });
+        console.error("Midtrans connection error via generateMidtransSnapToken helper:", midtransError);
+        return res.status(500).json({ error: `Gagal terhubung ke server Midtrans: ${midtransError.message || 'Error'}` });
       }
     }
 
@@ -4289,10 +4288,12 @@ async function startServer() {
       }
 
       // Check real Midtrans status if server key exists and order is Midtrans
-      const midtransServerKey = process.env.MIDTRANS_SERVER_KEY;
+      const midtransServerKey = dbData.logoSettings?.midtransServerKey || process.env.MIDTRANS_SERVER_KEY;
       if (order && (order.paymentMethod === "MIDTRANS" || order.paymentMethod === "MIDTRANS_SNAP") && midtransServerKey) {
         try {
-          const isProd = process.env.MIDTRANS_IS_PRODUCTION === "true" || !midtransServerKey.startsWith("SB-");
+          const isProd = dbData.logoSettings?.midtransIsProduction !== undefined 
+            ? dbData.logoSettings.midtransIsProduction 
+            : (process.env.MIDTRANS_IS_PRODUCTION === "true" || !midtransServerKey.startsWith("SB-"));
           const statusUrl = isProd
             ? `https://api.midtrans.com/v2/${orderId}/status`
             : `https://api.sandbox.midtrans.com/v2/${orderId}/status`;
@@ -4354,6 +4355,85 @@ async function startServer() {
     } catch (err) {
       console.error("Fetch order payment status error:", err);
       res.status(500).json({ error: "Gagal memuat status pembayaran." });
+    }
+  });
+
+  // API - Settings - MIDTRANS CONNECTION TEST - POST
+  app.post("/api/payments/midtrans-test", async (req, res) => {
+    try {
+      const { serverKey, clientKey, isProduction } = req.body;
+      const dbData = await loadDatabase();
+      const keyToUse = serverKey !== undefined ? serverKey : (dbData.logoSettings?.midtransServerKey || process.env.MIDTRANS_SERVER_KEY);
+
+      if (!keyToUse) {
+        return res.status(400).json({
+          success: false,
+          message: "Midtrans Server Key tidak boleh kosong. Harap isi Sandbox Server Key Anda."
+        });
+      }
+
+      console.log("Testing connection to Midtrans Sandbox...");
+      const isProd = isProduction !== undefined 
+        ? isProduction 
+        : (dbData.logoSettings?.midtransIsProduction !== undefined 
+          ? dbData.logoSettings.midtransIsProduction 
+          : !keyToUse.startsWith("SB-"));
+          
+      const midtransUrl = isProd
+        ? "https://app.midtrans.com/snap/v1/transactions"
+        : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+
+      const authHeader = "Basic " + Buffer.from(keyToUse + ":").toString("base64");
+
+      const response = await fetch(midtransUrl, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": authHeader
+        },
+        body: JSON.stringify({
+          transaction_details: {
+            order_id: "TEST-CONN-" + Date.now(),
+            gross_amount: 10000
+          },
+          item_details: [{
+            id: "test-conn",
+            price: 10000,
+            quantity: 1,
+            name: "Test Connection A-GIN"
+          }],
+          customer_details: {
+            first_name: "Test",
+            phone: "08123456789"
+          }
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result && result.redirect_url) {
+        return res.json({
+          success: true,
+          message: "Koneksi berhasil! API Key Sandbox valid dan Midtrans Snap siap menerima pembayaran real-time.",
+          redirectUrl: result.redirect_url,
+          token: result.token
+        });
+      } else {
+        const errorMsg = result?.error_messages ? result.error_messages.join(", ") : "Gagal memproses transaksi uji coba.";
+        return res.status(400).json({
+          success: false,
+          error: errorMsg,
+          message: `Koneksi gagal: ${errorMsg}. Silakan cek kembali apakah Server Key Anda sudah benar.`
+        });
+      }
+    } catch (err: any) {
+      console.error("Midtrans connection test exception:", err);
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        message: "Kesalahan jaringan: Gagal menghubungi server Midtrans API."
+      });
     }
   });
 

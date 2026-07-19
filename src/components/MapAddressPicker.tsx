@@ -436,39 +436,15 @@ export default function MapAddressPicker({
         setIsLocating(false);
       },
       (error) => {
-        console.warn("High accuracy geolocation failed, trying standard accuracy...", error);
-        navigator.geolocation.getCurrentPosition(
-          async (lowAccPosition) => {
-            const lat = lowAccPosition.coords.latitude;
-            const lng = lowAccPosition.coords.longitude;
-            const newCoords = { lat, lng };
-
-            setCoords(newCoords);
-            if (mapRef.current && markerRef.current) {
-              mapRef.current.setView([lat, lng], 16);
-              markerRef.current.setLatLng([lat, lng]);
-            }
-            
-            await reverseGeocodeLeaflet(lat, lng);
-            setIsLocating(false);
-          },
-          (lowAccError) => {
-            console.error("Standard accuracy geolocation also failed:", lowAccError);
-            let errorMsg = "Gagal mendeteksi lokasi otomatis. Harap cari/geser pin manual di peta.";
-            if (lowAccError.code === lowAccError.PERMISSION_DENIED) {
-              errorMsg = "Akses lokasi ditolak. Harap izinkan akses lokasi GPS di browser Anda atau cari alamat manual.";
-            } else if (lowAccError.code === lowAccError.POSITION_UNAVAILABLE) {
-              errorMsg = "Informasi lokasi tidak tersedia. Harap ketik alamat Anda atau geser pin manual.";
-            } else if (lowAccError.code === lowAccError.TIMEOUT) {
-              errorMsg = "Waktu pencarian lokasi habis. Harap coba lagi atau cari alamat manual.";
-            }
-            setLocationError(errorMsg);
-            setIsLocating(false);
-          },
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-        );
+        console.error("Error detecting geolocation:", error);
+        let errorMsg = "Gagal mendeteksi lokasi Anda.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = "Akses lokasi ditolak. Harap izinkan akses lokasi GPS di browser Anda.";
+        }
+        setLocationError(errorMsg);
+        setIsLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -956,38 +932,15 @@ function GoogleMapPickerContent({
         setIsLocating(false);
       },
       (error) => {
-        console.warn("High accuracy geolocation failed, trying standard accuracy...", error);
-        navigator.geolocation.getCurrentPosition(
-          (lowAccPosition) => {
-            const lat = lowAccPosition.coords.latitude;
-            const lng = lowAccPosition.coords.longitude;
-            const newCoords = { lat, lng };
-
-            setCoords(newCoords);
-            if (map) {
-              map.setCenter(newCoords);
-              map.setZoom(17);
-            }
-            reverseGeocodeGoogle(lat, lng);
-            setIsLocating(false);
-          },
-          (lowAccError) => {
-            console.error("Standard accuracy geolocation also failed:", lowAccError);
-            let errorMsg = "Gagal mendeteksi lokasi otomatis. Harap cari/geser pin manual di peta.";
-            if (lowAccError.code === lowAccError.PERMISSION_DENIED) {
-              errorMsg = "Akses lokasi ditolak. Harap izinkan akses lokasi GPS di browser Anda atau cari alamat manual.";
-            } else if (lowAccError.code === lowAccError.POSITION_UNAVAILABLE) {
-              errorMsg = "Informasi lokasi tidak tersedia. Harap ketik alamat Anda atau geser pin manual.";
-            } else if (lowAccError.code === lowAccError.TIMEOUT) {
-              errorMsg = "Waktu pencarian lokasi habis. Harap coba lagi atau cari alamat manual.";
-            }
-            setLocationError(errorMsg);
-            setIsLocating(false);
-          },
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-        );
+        console.error("Error detecting geolocation:", error);
+        let errorMsg = "Gagal mendeteksi lokasi Anda.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = "Akses lokasi ditolak. Harap izinkan akses lokasi GPS di browser Anda.";
+        }
+        setLocationError(errorMsg);
+        setIsLocating(false);
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
